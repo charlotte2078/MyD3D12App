@@ -133,6 +133,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="d3dUtil.cpp" />
+    <ClCompile Include="MathHelper.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
