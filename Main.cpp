@@ -33,6 +33,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pCmdLine, 
 		return 0;
 	}
 
+	// Start timer
+
 	return Run();
 }
 
@@ -119,7 +121,7 @@ int Run()
 
 	// Release any resources before quitting
 
-	return (int)msg.wParam;
+	return static_cast<char>(msg.wParam); // as in https://github.com/microsoft/DirectX-Graphics-Samples/blob/master/Samples/Desktop/D3D12HelloWorld/src/HelloWindow/Win32Application.cpp
 }
 
 LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
