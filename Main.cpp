@@ -2,6 +2,7 @@
 // Based on code by Frank Luna - 3D Game Programming with DirectX12 - Appendix A (pp 758-761)
 
 #include <windows.h>
+#include "Input.h"
 
 // The main window handle that identifies a created window
 HWND ghMainWnd = 0;
@@ -115,31 +116,62 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
 	switch (msg)
 	{
-	case WM_LBUTTONDOWN:
-	{
-		MessageBox(0, L"Hello, World!", L"Hello", MB_OK);
-		return 0;
-	}
-
-	case WM_KEYDOWN:
-	{
-		if (wParam == VK_ESCAPE)
-		{
-			DestroyWindow(ghMainWnd);
-			return 0;
-		}
-
-		break;
-	}
-
+	// Deal with window being closed
 	case WM_DESTROY:
 	{
 		PostQuitMessage(0);
 		return 0;
 	}
+	// Key down and key release events, see Input.h
+	case WM_KEYDOWN:
+	{
+		KeyDownEvent(static_cast<EKeyCode>(wParam));
+		break;
 	}
+	case WM_KEYUP:
+	{
+		KeyUpEvent(static_cast<EKeyCode>(wParam));
+		break;
+	}
+	// Mouse movement/button press events
+	case WM_MOUSEMOVE:
+	{
+		MouseMoveEvent(LOWORD(lParam), HIWORD(lParam));
+		break;
+	}
+	case WM_LBUTTONDOWN:
+	{
+		KeyDownEvent(Mouse_LButton);
+		break;
+	}
+	case WM_LBUTTONUP:
+	{
+		KeyUpEvent(Mouse_LButton);
+		break;
+	}
+	case WM_RBUTTONDOWN:
+	{
+		KeyDownEvent(Mouse_RButton);
+		break;
+	}
+	case WM_RBUTTONUP:
+	{
+		KeyUpEvent(Mouse_RButton);
+		break;
+	}
+	case WM_MBUTTONDOWN:
+	{
+		KeyDownEvent(Mouse_MButton);
+		break;
+	}
+	case WM_MBUTTONUP:
+	{
+		KeyUpEvent(Mouse_MButton);
+		break;
+	}
+	} // End of switch statement
 
-	// Equivalent to defualt case - pass any other messages we don't handle
+	// Equivalent to default case - pass any other messages we don't handle
 	// back to Windows for default handling
 	return DefWindowProc(hWnd, msg, wParam, lParam);
 }
