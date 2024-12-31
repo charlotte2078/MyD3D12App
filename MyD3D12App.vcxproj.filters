@@ -26,7 +26,7 @@
     <ClInclude Include="MathHelper.h">
       <Filter>Utility</Filter>
     </ClInclude>
-    <ClInclude Include="DXSmaple.h">
+    <ClInclude Include="DXSample.h">
       <Filter>CommonDX</Filter>
     </ClInclude>
     <ClInclude Include="DXSampleHelper.h">
@@ -48,6 +48,9 @@
     </ClCompile>
     <ClCompile Include="MathHelper.cpp">
       <Filter>Utility</Filter>
+    </ClCompile>
+    <ClCompile Include="DXSample.cpp">
+      <Filter>CommonDX</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

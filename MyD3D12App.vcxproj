@@ -130,13 +130,14 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="DXSampleHelper.h" />
-    <ClInclude Include="DXSmaple.h" />
+    <ClInclude Include="DXSample.h" />
     <ClInclude Include="Input.h" />
     <ClInclude Include="MathHelper.h" />
     <ClInclude Include="StdIncludes.h" />
     <ClInclude Include="Timer.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="DXSample.cpp" />
     <ClCompile Include="Input.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="MathHelper.cpp" />
