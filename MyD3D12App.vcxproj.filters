@@ -35,6 +35,9 @@
     <ClInclude Include="StdIncludes.h">
       <Filter>CommonDX</Filter>
     </ClInclude>
+    <ClInclude Include="Win32Application.h">
+      <Filter>CommonDX</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Main.cpp">
@@ -50,6 +53,9 @@
       <Filter>Utility</Filter>
     </ClCompile>
     <ClCompile Include="DXSample.cpp">
+      <Filter>CommonDX</Filter>
+    </ClCompile>
+    <ClCompile Include="Win32Application.cpp">
       <Filter>CommonDX</Filter>
     </ClCompile>
   </ItemGroup>
