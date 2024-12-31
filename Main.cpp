@@ -47,7 +47,7 @@ bool InitWindowsApp(HINSTANCE instanceHandle, int show)
 	wc.cbClsExtra = 0;														// extra memory slots that we don't need in this case
 	wc.cbWndExtra = 0;
 	wc.hInstance = instanceHandle;											// handle to the application instance (passed in through WinMain)
-	wc.hIcon = LoadIcon(0, IDI_APPLICATION);								// handle for the window's icon
+	wc.hIcon = LoadIcon(nullptr, IDI_APPLICATION);								// handle for the window's icon
 	wc.hCursor = LoadCursor(nullptr, IDC_ARROW);									// handle for the window's cursor
 	wc.hbrBackground = (HBRUSH)GetStockObject(WHITE_BRUSH);	// brush to use for the background colour - standard white here
 	wc.lpszMenuName = nullptr;													// specifies window's menu (we have none)
@@ -63,16 +63,16 @@ bool InitWindowsApp(HINSTANCE instanceHandle, int show)
 	// Create a window with our registered WNDCLASS instance
 	ghMainWnd = CreateWindow(
 		L"BasicWndClass",		// the name of our WNDCLASS structure
-		L"Win32Basic",			// the name of our window (appears in the window's capture bar)
+		L"My D3D12 App",		// the name of our window (appears in the window's capture bar)
 		WS_OVERLAPPEDWINDOW,	// the style of our window
 		CW_USEDEFAULT,			// the x position at the top left corner of the window relative to the screen - CW_USEDEFAULT lets Windows choose an appropriate default
 		CW_USEDEFAULT,			// the y position at the top left corner of the window relative to the screen
 		CW_USEDEFAULT,			// the width of the window in pixels
 		CW_USEDEFAULT,			// the height of the window in pixels
-		0,						// handle to a parent window (none in our case)
-		0,						// handle to a menu (none in our case)
+		nullptr,				// handle to a parent window (none in our case)
+		nullptr,				// handle to a menu (none in our case)
 		instanceHandle,			// handle to the application the window is associated with
-		0);						// a pointer to user-defined data that you want to be avaiable to a WM_CREATE message handler
+		nullptr);				// a pointer to user-defined data that you want to be avaiable to a WM_CREATE message handler
 
 	// Check that create window succeeded
 	if (!ghMainWnd)
@@ -104,10 +104,20 @@ int Run()
 		// Otherwise render/update our scene
 		else
 		{
-			// GAME STUFF - UPDATE LATER
+			// Update the scene by the amount of time since the last frame
+
+			// Draw the scene
+
+			// Exit if press escape
+			if (KeyHit(Key_Escape))
+			{
+				DestroyWindow(ghMainWnd);
+			}
 		}
 
 	}
+
+	// Release any resources before quitting
 
 	return (int)msg.wParam;
 }
