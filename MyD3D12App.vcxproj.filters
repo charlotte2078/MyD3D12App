@@ -12,6 +12,9 @@
     <Filter Include="Utility">
       <UniqueIdentifier>{1e8cf2fb-88d8-4d42-bdd4-c5b09b22b217}</UniqueIdentifier>
     </Filter>
+    <Filter Include="CommonDX">
+      <UniqueIdentifier>{65e29157-8b98-44c7-a420-070d9f7c7a82}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Input.h">
@@ -22,6 +25,15 @@
     </ClInclude>
     <ClInclude Include="MathHelper.h">
       <Filter>Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="DXSmaple.h">
+      <Filter>CommonDX</Filter>
+    </ClInclude>
+    <ClInclude Include="DXSampleHelper.h">
+      <Filter>CommonDX</Filter>
+    </ClInclude>
+    <ClInclude Include="StdIncludes.h">
+      <Filter>CommonDX</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
