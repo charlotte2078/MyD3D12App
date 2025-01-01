@@ -4,6 +4,7 @@
 #pragma once
 
 #include "DXSampleHelper.h"
+#include "Win32Application.h"
 
 // Abstract class that holds base functionality for DX12 Apps.
 class DXSample

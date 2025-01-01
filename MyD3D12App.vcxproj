@@ -144,6 +144,7 @@
     <ClCompile Include="Input.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="MathHelper.cpp" />
+    <ClCompile Include="MyD3D12App.cpp" />
     <ClCompile Include="Timer.cpp" />
     <ClCompile Include="Win32Application.cpp" />
   </ItemGroup>
