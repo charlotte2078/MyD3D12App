@@ -38,6 +38,12 @@
     <ClInclude Include="Win32Application.h">
       <Filter>CommonDX</Filter>
     </ClInclude>
+    <ClInclude Include="MyD3D12App.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="d3dx12.h">
+      <Filter>CommonDX</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Main.cpp">

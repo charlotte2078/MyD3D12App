@@ -129,10 +129,12 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="d3dx12.h" />
     <ClInclude Include="DXSampleHelper.h" />
     <ClInclude Include="DXSample.h" />
     <ClInclude Include="Input.h" />
     <ClInclude Include="MathHelper.h" />
+    <ClInclude Include="MyD3D12App.h" />
     <ClInclude Include="StdIncludes.h" />
     <ClInclude Include="Timer.h" />
     <ClInclude Include="Win32Application.h" />

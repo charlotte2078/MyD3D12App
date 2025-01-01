@@ -6,6 +6,11 @@
 #include "StdIncludes.h"
 #include <stdexcept>
 
+// Link d3d12 libraries
+#pragma comment(lib, "d3dcompiler.lib")
+#pragma comment(lib, "D3D12.lib")
+#pragma comment(lib, "dxgi.lib")
+
 using Microsoft::WRL::ComPtr;
 
 inline std::string HrToString(HRESULT hr)
