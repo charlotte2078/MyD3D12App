@@ -242,3 +242,80 @@ void MyD3D12App::LoadAssets()
 		WaitForPreviousFrame();
 	}
 }
+
+// Update frame based values
+void MyD3D12App::OnUpdate()
+{
+
+}
+
+// Render the scene
+void MyD3D12App::OnRender()
+{
+	// Record all the commands we need to render teh scene into the command list
+	PopulateCommandList();
+
+	// Execute the command list
+	ID3D12CommandList* ppCommandLists[] = { mCommandList.Get() };
+	mCommandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
+
+	// Present the frame
+	ThrowIfFailed(mSwapChain->Present(1, 0));
+
+	WaitForPreviousFrame();
+}
+
+void MyD3D12App::OnDestroy()
+{
+	WaitForPreviousFrame();
+
+	CloseHandle(mFenceEvent);
+}
+
+void MyD3D12App::PopulateCommandList()
+{
+	ThrowIfFailed(mCommandAllocator->Reset());
+
+	ThrowIfFailed(mCommandList->Reset(mCommandAllocator.Get(), mPipelineState.Get()));
+
+	mCommandList->SetGraphicsRootSignature(mRootSignature.Get());
+	mCommandList->RSSetViewports(1, &mViewport);
+	mCommandList->RSSetScissorRects(1, &mScissorRect);
+
+	mCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(mRenderTargets[mFrameIndex].Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET));
+
+	CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(mRtvHeap->GetCPUDescriptorHandleForHeapStart(), mFrameIndex, mRtvDescriptorSize);
+	mCommandList->OMSetRenderTargets(1, &rtvHandle, FALSE, nullptr);
+
+	const float clearColour[] = { 0.0f, 0.2, 0.4f, 1.0f };
+	mCommandList->ClearRenderTargetView(rtvHandle, clearColour, 0, nullptr);
+	mCommandList->IASetPrimitiveTopology(D3D10_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	mCommandList->IASetVertexBuffers(0, 1, &mVertexBufferView);
+	mCommandList->DrawInstanced(3, 1, 0, 0);
+
+	mCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(mRenderTargets[mFrameIndex].Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT));
+
+	ThrowIfFailed(mCommandList->Close());
+}
+
+void MyD3D12App::WaitForPreviousFrame()
+{
+	// WAITING FOR THE FRAME TO COMPLETE BEFORE CONTINUING IS NOT BEST PRACTICE.
+	// This is code implemented as such for simplicity. The D3D12HelloFrameBuffering
+	// sample illustrates how to use fences for efficient resource usage and to
+	// maximize GPU utilization.
+
+	// Signal and increment the fence value.
+	const UINT64 fence = mFenceValue;
+	ThrowIfFailed(mCommandQueue->Signal(mFence.Get(), fence));
+	mFenceValue++;
+
+	// Wait until the previous frame is finished.
+	if (mFence->GetCompletedValue() < fence)
+	{
+		ThrowIfFailed(mFence->SetEventOnCompletion(fence, mFenceEvent));
+		WaitForSingleObject(mFenceEvent, INFINITE);
+	}
+
+	mFrameIndex = mSwapChain->GetCurrentBackBufferIndex();
+}

@@ -54,7 +54,7 @@ private:
 
 	void LoadPipeline();
 	void LoadAssets();
-	void PopulateCommandLists();
+	void PopulateCommandList();
 	void WaitForPreviousFrame();
 };
 
