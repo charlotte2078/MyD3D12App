@@ -56,5 +56,12 @@ private:
 	void LoadAssets();
 	void PopulateCommandList();
 	void WaitForPreviousFrame();
+
+	void CreateDescriptorHeaps();
+	void BuildRootSignature();
+	void BuildShadersAndInputLayout();
+	void BuildBoxGeometry();
+	void BuildPSO();
+
 };
 
