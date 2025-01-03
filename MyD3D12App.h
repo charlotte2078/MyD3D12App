@@ -61,11 +61,9 @@ private:
 	void CreateFrameResouces();
 	void CreateRootSignature();
 	void CreatePSO();
+	void CreateVertexBuffer();
 
-	void BuildRootSignature();
-	void BuildShadersAndInputLayout();
 	void BuildBoxGeometry();
-	void BuildPSO();
 
 };
 

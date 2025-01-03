@@ -115,42 +115,7 @@ void MyD3D12App::LoadAssets()
 	// Close the command list (the command list is created in the recording state
 	ThrowIfFailed(mCommandList->Close());
 
-	// Create the vertex buffer
-	{
-		// Define our geometry
-		Vertex triangleVertices[] =
-		{
-			{ { 0.0f, 0.25f * mAspectRatio, 0.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } },
-			{ { 0.25f, -0.25f * mAspectRatio, 0.0f }, { 0.0f, 1.0f, 0.0f, 1.0f } },
-			{ { -0.25f, -0.25f * mAspectRatio, 0.0f }, { 0.0f, 0.0f, 1.0f, 1.0f } }
-		};
-
-		const UINT vertexBufferSize = sizeof(triangleVertices);
-
-		// Note: using upload heaps to transfer static data like vert buffers is not 
-		// recommended. Every time the GPU needs it, the upload heap will be marshalled 
-		// over. Please read up on Default Heap usage. An upload heap is used here for 
-		// code simplicity and because there are very few verts to actually transfer.
-		ThrowIfFailed(mDevice->CreateCommittedResource(
-			&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
-			D3D12_HEAP_FLAG_NONE,
-			&CD3DX12_RESOURCE_DESC::Buffer(vertexBufferSize),
-			D3D12_RESOURCE_STATE_GENERIC_READ,
-			nullptr,
-			IID_PPV_ARGS(&mVertexBuffer)));
-
-		// Copy the triangle data to the vertex buffer
-		UINT8* pVertexDataBegin;
-		CD3DX12_RANGE readRange(0, 0);
-		ThrowIfFailed(mVertexBuffer->Map(0, &readRange, reinterpret_cast<void**>(&pVertexDataBegin)));
-		memcpy(pVertexDataBegin, triangleVertices, sizeof(triangleVertices));
-		mVertexBuffer->Unmap(0, nullptr);
-
-		// Initialise the vertex buffer view
-		mVertexBufferView.BufferLocation = mVertexBuffer->GetGPUVirtualAddress();
-		mVertexBufferView.StrideInBytes = sizeof(Vertex);
-		mVertexBufferView.SizeInBytes = vertexBufferSize;
-	}
+	CreateVertexBuffer();
 
 	// Create synchronisation objects and wait until assets have been uploaded to the GPU
 	{
@@ -331,4 +296,42 @@ void MyD3D12App::CreatePSO()
 	psoDesc.SampleDesc.Count = 1;
 
 	ThrowIfFailed(mDevice->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&mPipelineState)));
+}
+
+// Create the vertex buffer (also define geometry)
+void MyD3D12App::CreateVertexBuffer()
+{
+	// Define our geometry
+	Vertex triangleVertices[] =
+	{
+		{ { 0.0f, 0.25f * mAspectRatio, 0.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } },
+		{ { 0.25f, -0.25f * mAspectRatio, 0.0f }, { 0.0f, 1.0f, 0.0f, 1.0f } },
+		{ { -0.25f, -0.25f * mAspectRatio, 0.0f }, { 0.0f, 0.0f, 1.0f, 1.0f } }
+	};
+
+	const UINT vertexBufferSize = sizeof(triangleVertices);
+
+	// Note: using upload heaps to transfer static data like vert buffers is not 
+	// recommended. Every time the GPU needs it, the upload heap will be marshalled 
+	// over. Please read up on Default Heap usage. An upload heap is used here for 
+	// code simplicity and because there are very few verts to actually transfer.
+	ThrowIfFailed(mDevice->CreateCommittedResource(
+		&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
+		D3D12_HEAP_FLAG_NONE,
+		&CD3DX12_RESOURCE_DESC::Buffer(vertexBufferSize),
+		D3D12_RESOURCE_STATE_GENERIC_READ,
+		nullptr,
+		IID_PPV_ARGS(&mVertexBuffer)));
+
+	// Copy the triangle data to the vertex buffer
+	UINT8* pVertexDataBegin;
+	CD3DX12_RANGE readRange(0, 0);
+	ThrowIfFailed(mVertexBuffer->Map(0, &readRange, reinterpret_cast<void**>(&pVertexDataBegin)));
+	memcpy(pVertexDataBegin, triangleVertices, sizeof(triangleVertices));
+	mVertexBuffer->Unmap(0, nullptr);
+
+	// Initialise the vertex buffer view
+	mVertexBufferView.BufferLocation = mVertexBuffer->GetGPUVirtualAddress();
+	mVertexBufferView.StrideInBytes = sizeof(Vertex);
+	mVertexBufferView.SizeInBytes = vertexBufferSize;
 }
