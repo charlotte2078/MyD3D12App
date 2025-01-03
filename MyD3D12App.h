@@ -62,8 +62,5 @@ private:
 	void CreateRootSignature();
 	void CreatePSO();
 	void CreateVertexBuffer();
-
-	void BuildBoxGeometry();
-
 };
 
