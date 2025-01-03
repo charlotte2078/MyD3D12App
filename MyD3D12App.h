@@ -59,6 +59,8 @@ private:
 
 	void CreateDescriptorHeaps();
 	void CreateFrameResouces();
+	void CreateRootSignature();
+	void CreatePSO();
 
 	void BuildRootSignature();
 	void BuildShadersAndInputLayout();

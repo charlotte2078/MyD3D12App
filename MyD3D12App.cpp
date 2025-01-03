@@ -106,22 +106,7 @@ void MyD3D12App::LoadPipeline()
 
 void MyD3D12App::LoadAssets()
 {
-	// Create an empty root signature
-	// A root signature defines what types of resources are bound to the graphics pipeline
-	{
-		CD3DX12_ROOT_SIGNATURE_DESC rootSignatureDesc;
-		rootSignatureDesc.Init(
-			0, // Num parameters
-			nullptr, // Ptr to root parameter
-			0, // Num static samplers
-			nullptr, // Pointer to static samplers desc
-			D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT); // Flags - this one opts the app into using the input assembler
-
-		ComPtr<ID3DBlob> signature;
-		ComPtr<ID3DBlob> error;
-		ThrowIfFailed(D3D12SerializeRootSignature(&rootSignatureDesc, D3D_ROOT_SIGNATURE_VERSION_1, &signature, &error));
-		ThrowIfFailed(mDevice->CreateRootSignature(0, signature->GetBufferPointer(), signature->GetBufferSize(), IID_PPV_ARGS(&mRootSignature)));
-	}
+	CreateRootSignature();
 
 	// Create the pipeline state (compile and load shaders)
 	{
@@ -326,4 +311,27 @@ void MyD3D12App::CreateFrameResouces()
 		mDevice->CreateRenderTargetView(mRenderTargets[n].Get(), nullptr, rtvHandle);
 		rtvHandle.Offset(1, mRtvDescriptorSize);
 	}
+}
+
+// Create an empty root signature
+// A root signature defines what types of resources are bound to the graphics pipeline
+void MyD3D12App::CreateRootSignature()
+{
+	CD3DX12_ROOT_SIGNATURE_DESC rootSignatureDesc;
+	rootSignatureDesc.Init(
+		0, // Num parameters
+		nullptr, // Ptr to root parameter
+		0, // Num static samplers
+		nullptr, // Pointer to static samplers desc
+		D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT); // Flags - this one opts the app into using the input assembler
+
+	ComPtr<ID3DBlob> signature;
+	ComPtr<ID3DBlob> error;
+	ThrowIfFailed(D3D12SerializeRootSignature(&rootSignatureDesc, D3D_ROOT_SIGNATURE_VERSION_1, &signature, &error));
+	ThrowIfFailed(mDevice->CreateRootSignature(0, signature->GetBufferPointer(), signature->GetBufferSize(), IID_PPV_ARGS(&mRootSignature)));
+}
+
+void MyD3D12App::CreatePSO()
+{
+
 }
