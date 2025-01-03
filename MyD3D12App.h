@@ -56,5 +56,11 @@ private:
 	void LoadAssets();
 	void PopulateCommandList();
 	void WaitForPreviousFrame();
+
+	void CreateDescriptorHeaps();
+	void CreateFrameResouces();
+	void CreateRootSignature();
+	void CreatePSO();
+	void CreateVertexBuffer();
 };
 
