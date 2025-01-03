@@ -97,20 +97,9 @@ void MyD3D12App::LoadPipeline()
 	ThrowIfFailed(swapChain.As(&mSwapChain)); // Check we can use the IDXGISwapChain1 as an IDXGISwapChain3
 	mFrameIndex = mSwapChain->GetCurrentBackBufferIndex(); // Introduced in IDSGISwapChain3
 
+	// Create an rtv descriptor heap then use that to create an RTV for each frame
 	CreateDescriptorHeaps();
-
-	// Create frame resources
-	{
-		CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(mRtvHeap->GetCPUDescriptorHandleForHeapStart());
-
-		// Create an RTV for each frame
-		for (UINT n = 0; n < FrameCount; n++)
-		{
-			ThrowIfFailed(mSwapChain->GetBuffer(n, IID_PPV_ARGS(&mRenderTargets[n])));
-			mDevice->CreateRenderTargetView(mRenderTargets[n].Get(), nullptr, rtvHandle);
-			rtvHandle.Offset(1, mRtvDescriptorSize);
-		}
-	}
+	CreateFrameResouces();
 
 	ThrowIfFailed(mDevice->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&mCommandAllocator)));
 }
@@ -322,4 +311,19 @@ void MyD3D12App::CreateDescriptorHeaps()
 	ThrowIfFailed(mDevice->CreateDescriptorHeap(&rtvHeapDesc, IID_PPV_ARGS(&mRtvHeap)));
 
 	mRtvDescriptorSize = mDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+}
+
+// Create resources needed for each frame.
+// Here need an RTV.
+void MyD3D12App::CreateFrameResouces()
+{
+	CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(mRtvHeap->GetCPUDescriptorHandleForHeapStart());
+
+	// Create an RTV for each frame
+	for (UINT n = 0; n < FrameCount; n++)
+	{
+		ThrowIfFailed(mSwapChain->GetBuffer(n, IID_PPV_ARGS(&mRenderTargets[n])));
+		mDevice->CreateRenderTargetView(mRenderTargets[n].Get(), nullptr, rtvHandle);
+		rtvHandle.Offset(1, mRtvDescriptorSize);
+	}
 }

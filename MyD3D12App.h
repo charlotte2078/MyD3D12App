@@ -58,6 +58,8 @@ private:
 	void WaitForPreviousFrame();
 
 	void CreateDescriptorHeaps();
+	void CreateFrameResouces();
+
 	void BuildRootSignature();
 	void BuildShadersAndInputLayout();
 	void BuildBoxGeometry();
