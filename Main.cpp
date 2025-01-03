@@ -1,7 +1,7 @@
 // Application entry point and window creation
 // Based on code by Frank Luna - 3D Game Programming with DirectX12 - Appendix A (pp 758-761)
 
-//#include "StdIncludes.h"
+#include "Includes.h"
 #include "MyD3D12App.h"
 
 // Equivalent of main()
@@ -14,6 +14,7 @@
 //
 // If WinMain succeeds, it should return the wParam member of the WM_QUIT message.
 // If it quits without entering the message loop it should return 0.
+_Use_decl_annotations_
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pCmdLine, int nShowCmd)
 {
 	MyD3D12App triangleSample(1280, 720, L"My First Triangle");

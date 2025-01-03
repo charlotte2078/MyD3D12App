@@ -1,3 +1,4 @@
+#include "Includes.h"
 #include "MyD3D12App.h"
 
 MyD3D12App::MyD3D12App(UINT width, UINT height, std::wstring name) :
@@ -15,7 +16,7 @@ void MyD3D12App::OnInit()
 	LoadAssets();
 }
 
-
+// Load the rendering pipeline dependencies
 void MyD3D12App::LoadPipeline()
 {
 	UINT dxgiFactoryFlags = 0;
@@ -134,7 +135,7 @@ void MyD3D12App::LoadAssets()
 			0, // Num parameters
 			nullptr, // Ptr to root parameter
 			0, // Num static samplers
-			nullptr, // Poointer to static samplers desc
+			nullptr, // Pointer to static samplers desc
 			D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT); // Flags - this one opts the app into using the input assembler
 
 		ComPtr<ID3DBlob> signature;
@@ -154,14 +155,14 @@ void MyD3D12App::LoadAssets()
 		UINT compileFlags = 0;
 #endif
 
-		ThrowIfFailed(D3DCompileFromFile(GetAssetFullPath(L"shaders.hlsl").c_str(), nullptr, nullptr, "VSMain", "vs_5_0", compileFlags, 0, &vertexShader, nullptr));
-		ThrowIfFailed(D3DCompileFromFile(GetAssetFullPath(L"shaders.hlsl").c_str(), nullptr, nullptr, "PSMain", "ps_5_0", compileFlags, 0, &pixelShader, nullptr));
+		ThrowIfFailed(D3DCompileFromFile(L"shaders.hlsl", nullptr, nullptr, "VSMain", "vs_5_0", compileFlags, 0, &vertexShader, nullptr));
+		ThrowIfFailed(D3DCompileFromFile(L"shaders.hlsl", nullptr, nullptr, "PSMain", "ps_5_0", compileFlags, 0, &pixelShader, nullptr));
 		
 		// Define the vertex input layout
 		D3D12_INPUT_ELEMENT_DESC inputElementDescs[] =
 		{
 			{"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
-			{"COLOUR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0}
+			{"COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0}
 		};
 
 		// Describe and create the graphics pipeline state object
@@ -180,7 +181,7 @@ void MyD3D12App::LoadAssets()
 		psoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
 		psoDesc.SampleDesc.Count = 1;
 
-		ThrowIfFailed(mDevice->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&mPipelineState)));		
+		ThrowIfFailed(mDevice->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&mPipelineState)));
 	}
 		
 	// Create the command list
@@ -196,7 +197,7 @@ void MyD3D12App::LoadAssets()
 		{
 			{ { 0.0f, 0.25f * mAspectRatio, 0.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } },
 			{ { 0.25f, -0.25f * mAspectRatio, 0.0f }, { 0.0f, 1.0f, 0.0f, 1.0f } },
-			{ { -0.25f, -0.25f * mAspectRatio,0.0f }, { 0.0f,0.0f,1.0f,1.0f } }
+			{ { -0.25f, -0.25f * mAspectRatio, 0.0f }, { 0.0f, 0.0f, 1.0f, 1.0f } }
 		};
 
 		const UINT vertexBufferSize = sizeof(triangleVertices);

@@ -3,13 +3,13 @@
 
 #pragma once
 
-#include "StdIncludes.h"
+#include "Includes.h"
 #include <stdexcept>
 
-// Link d3d12 libraries
-#pragma comment(lib, "d3dcompiler.lib")
-#pragma comment(lib, "D3D12.lib")
-#pragma comment(lib, "dxgi.lib")
+//// Link d3d12 libraries
+//#pragma comment(lib, "d3dcompiler.lib")
+//#pragma comment(lib, "D3D12.lib")
+//#pragma comment(lib, "dxgi.lib")
 
 using Microsoft::WRL::ComPtr;
 
@@ -177,7 +177,8 @@ inline void SetName(ID3D12Object* pObject, LPCWSTR name)
 inline void SetNameIndexed(ID3D12Object* pObject, LPCWSTR name, UINT index)
 {
 	WCHAR fullName[50];
-	if (swprintf_s(fullName, L"&s[%u]", name, index) > 0)
+	//if (swprintf_s(fullName, L"&s[%u]", name, index) > 0)
+	if (swprintf_s(fullName, L"%s[%u]", name, index) > 0)
 	{
 		pObject->SetName(fullName);
 	}

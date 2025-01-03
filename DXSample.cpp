@@ -33,10 +33,10 @@ std::wstring DXSample::GetAssetFullPath(LPCWSTR assetName)
 // If none are found then *ppAdapter is set to nullptr.
 _Use_decl_annotations_	// Makes sure the same annotation are used as in the header
 						// e.g. _In_
-	void GetHardwareAdapter(
-		IDXGIFactory1* pFactory,
-		IDXGIAdapter1** ppAdapter,
-		bool requestHighPerformanceAdapter)
+void DXSample::GetHardwareAdapter(
+	IDXGIFactory1* pFactory,
+	IDXGIAdapter1** ppAdapter,
+	bool requestHighPerformanceAdapter)
 {
 	*ppAdapter = nullptr;
 

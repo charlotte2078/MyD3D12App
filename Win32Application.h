@@ -14,7 +14,7 @@ public:
 	static HWND GetHwnd() { return mhWnd; }
 
 protected:
-	static LRESULT CALLBACK WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
+	static LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 
 private:
 	static HWND mhWnd;

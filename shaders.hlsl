@@ -4,22 +4,22 @@
 struct PSInput
 {
     float4 position : SV_POSITION;
-    float4 colour : COLOUR;
+    float4 color : COLOR;
 };
 
 // Simple Vertex shader
-PSInput VSMain(float4 position : POSITIONT, float4 colour : COLOUR)
+PSInput VSMain(float4 position : POSITION, float4 color : COLOR)
 {
     PSInput result;
     
     result.position = position;
-    result.colour = colour;
+    result.color = color;
     
     return result;
 }
 
 // Simple pixel shader
-float PSMain(PSInput input) : SV_TARGET
+float4 PSMain(PSInput input) : SV_TARGET
 {
-    return input.colour;
+    return input.color;
 }

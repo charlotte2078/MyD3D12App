@@ -15,6 +15,9 @@
     <Filter Include="CommonDX">
       <UniqueIdentifier>{65e29157-8b98-44c7-a420-070d9f7c7a82}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Shaders">
+      <UniqueIdentifier>{31b0e61a-5e77-434d-93c0-d2529240340b}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Input.h">
@@ -32,7 +35,7 @@
     <ClInclude Include="DXSampleHelper.h">
       <Filter>CommonDX</Filter>
     </ClInclude>
-    <ClInclude Include="StdIncludes.h">
+    <ClInclude Include="Includes.h">
       <Filter>CommonDX</Filter>
     </ClInclude>
     <ClInclude Include="Win32Application.h">
@@ -40,9 +43,6 @@
     </ClInclude>
     <ClInclude Include="MyD3D12App.h">
       <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="d3dx12.h">
-      <Filter>CommonDX</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -69,6 +69,13 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="shaders.hlsl" />
+    <None Include="packages.config">
+      <Filter>Source Files</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="shaders.hlsl">
+      <Filter>Shaders</Filter>
+    </CustomBuild>
   </ItemGroup>
 </Project>
