@@ -10,6 +10,10 @@ MyD3D12App::MyD3D12App(UINT width, UINT height, std::wstring name) :
 {
 }
 
+MyD3D12App::~MyD3D12App()
+{
+}
+
 void MyD3D12App::OnInit()
 {
 	LoadPipeline();

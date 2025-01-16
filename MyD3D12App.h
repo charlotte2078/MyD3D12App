@@ -12,7 +12,15 @@ using Microsoft::WRL::ComPtr;
 class MyD3D12App : public DXSample
 {
 public:
+	// Constructor
 	MyD3D12App(UINT width, UINT height, std::wstring name);
+
+	// Prohibit copying
+	MyD3D12App(const MyD3D12App& rhs) = delete;
+	MyD3D12App& operator=(const MyD3D12App& rhs) = delete;
+	
+	// Destructor
+	~MyD3D12App();
 
 	virtual void OnInit() override;
 	virtual void OnUpdate() override;
@@ -23,6 +31,7 @@ private:
 	// The number of buffers in the swap chain
 	static const UINT FrameCount = 2;
 
+	// Specifies the information each vertex will hold
 	struct Vertex
 	{
 		XMFLOAT3 position;
@@ -31,7 +40,7 @@ private:
 
 	struct ObjectConstants
 	{
-		XMFLOAT4X4 WorldViewProj = MathHelper::Identity4x4();
+		XMFLOAT4X4 worldViewProj = MathHelper::Identity4x4();
 	};
 
 	// Pipeline objects
