@@ -10,7 +10,14 @@
 class DXSample
 {
 public:
+	// Constructor
 	DXSample(UINT width, UINT height, std::wstring name);
+
+	// Prohibit copying
+	DXSample(const DXSample& rhs) = delete;
+	DXSample& operator=(const DXSample& rhs) = delete;
+
+	// Virtual destructor - needed so this will call correctly
 	virtual ~DXSample();
 
 	virtual void OnInit() = 0;

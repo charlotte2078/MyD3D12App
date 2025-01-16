@@ -182,7 +182,7 @@ void MyD3D12App::PopulateCommandList()
 	CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(mRtvHeap->GetCPUDescriptorHandleForHeapStart(), mFrameIndex, mRtvDescriptorSize);
 	mCommandList->OMSetRenderTargets(1, &rtvHandle, FALSE, nullptr);
 
-	const float clearColour[] = { 0.0f, 0.2, 0.4f, 1.0f };
+	const float clearColour[] = { 0.0f, 0.2f, 0.4f, 1.0f };
 	mCommandList->ClearRenderTargetView(rtvHandle, clearColour, 0, nullptr);
 	mCommandList->IASetPrimitiveTopology(D3D10_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	mCommandList->IASetVertexBuffers(0, 1, &mVertexBufferView);
