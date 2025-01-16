@@ -4,6 +4,7 @@
 #pragma once
 
 #include "DXSample.h"
+#include "MathHelper.h"
 
 using namespace DirectX;
 using Microsoft::WRL::ComPtr;
@@ -26,6 +27,11 @@ private:
 	{
 		XMFLOAT3 position;
 		XMFLOAT4 color;
+	};
+
+	struct ObjectConstants
+	{
+		XMFLOAT4X4 WorldViewProj = MathHelper::Identity4x4();
 	};
 
 	// Pipeline objects
