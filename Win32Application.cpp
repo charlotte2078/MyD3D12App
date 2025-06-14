@@ -3,6 +3,7 @@
 
 #include "Win32Application.h"
 #include "Input.h"
+#include "Timer.h"
 
 HWND Win32Application::mhWnd = nullptr;
 
@@ -49,14 +50,35 @@ int Win32Application::Run(DXSample* pSample, HINSTANCE hInstance, int nCmdShow)
 
 	ShowWindow(mhWnd, nCmdShow);
 
+	// Start our timer here
+	Timer timer;
+	timer.Start();
+
 	// Main sample loop
 	MSG msg = {};
 	while (msg.message != WM_QUIT)
 	{
+		// Check for and deal with any window messages (input, window resizing, minimizing, etc.).
+		// The actual message processing happens in the function WndProc below
 		if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
 		{
 			TranslateMessage(&msg);
 			DispatchMessage(&msg);
+		}
+		else // When no windows messages left to process then render & update our scene
+		{
+			// Update frame time
+			float frameTime = timer.GetDeltaTime();
+			pSample->OnUpdate(frameTime);
+
+			// Draw scene
+			pSample->OnRender();
+
+			// Quit if press escape
+			if (KeyHit(Key_Escape))
+			{
+				DestroyWindow(mhWnd);
+			}
 		}
 	}
 
@@ -90,12 +112,15 @@ LRESULT CALLBACK Win32Application::WndProc(HWND hWnd, UINT msg, WPARAM wParam, L
 	// Deal with window painting - where updating/rendering is done
 	case WM_PAINT:
 	{
-		if (pSample)
+		/*if (pSample)
 		{
 			pSample->OnUpdate();
 			pSample->OnRender();
 			return 0;
-		}
+		}*/
+		PAINTSTRUCT ps;
+		HDC hdc = BeginPaint(hWnd, &ps);
+		EndPaint(hWnd, &ps);
 	}
 	// Key down and key release events, see Input.h
 	case WM_KEYDOWN:

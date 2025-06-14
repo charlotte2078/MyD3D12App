@@ -139,7 +139,7 @@ void MyD3D12App::LoadAssets()
 }
 
 // Update frame based values
-void MyD3D12App::OnUpdate()
+void MyD3D12App::OnUpdate(const float deltaTime)
 {
 
 }

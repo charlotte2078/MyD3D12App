@@ -23,7 +23,7 @@ public:
 	~MyD3D12App();
 
 	virtual void OnInit() override;
-	virtual void OnUpdate() override;
+	virtual void OnUpdate(const float deltaTime) override;
 	virtual void OnRender() override;
 	virtual void OnDestroy() override;
 
