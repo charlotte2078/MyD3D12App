@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include "DXSample.h"
-#include "MathHelper.h"
+#include "CommonDX/Public/DXSample.h"
+#include "Utility/Public/MathHelper.h"
 
 using namespace DirectX;
 using Microsoft::WRL::ComPtr;

@@ -1,4 +1,6 @@
-#include "Timer.h"
+#include "Utility/Public/Timer.h"
+
+#include <Windows.h>
 
 // Defualt constructor
 Timer::Timer() :

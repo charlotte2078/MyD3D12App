@@ -1,7 +1,7 @@
 // Application entry point and window creation
 // Based on code by Frank Luna - 3D Game Programming with DirectX12 - Appendix A (pp 758-761)
 
-#include "Includes.h"
+#include "CommonDX/Public/Includes.h"
 #include "MyD3D12App.h"
 
 // Equivalent of main()

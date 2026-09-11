@@ -118,6 +118,7 @@
       <EnableEnhancedInstructionSet>NotSet</EnableEnhancedInstructionSet>
       <CompileAsWinRT>false</CompileAsWinRT>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <AdditionalIncludeDirectories>$(ProjectDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -143,27 +144,27 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="DXSampleHelper.h" />
-    <ClInclude Include="DXSample.h" />
-    <ClInclude Include="Input.h" />
-    <ClInclude Include="MathHelper.h" />
-    <ClInclude Include="MyD3D12App.h" />
-    <ClInclude Include="Includes.h" />
-    <ClInclude Include="Timer.h" />
-    <ClInclude Include="Win32Application.h" />
+    <ClInclude Include="CommonDX\Public\DXSampleHelper.h" />
+    <ClInclude Include="CommonDX\Public\DXSample.h" />
+    <ClInclude Include="Utility\Public\Input.h" />
+    <ClInclude Include="Utility\Public\MathHelper.h" />
+    <ClInclude Include="Source\MyD3D12App.h" />
+    <ClInclude Include="CommonDX\Public\Includes.h" />
+    <ClInclude Include="Utility\Public\Timer.h" />
+    <ClInclude Include="CommonDX\Public\Win32Application.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="DXSample.cpp" />
-    <ClCompile Include="Input.cpp" />
-    <ClCompile Include="Main.cpp" />
-    <ClCompile Include="MathHelper.cpp" />
-    <ClCompile Include="MyD3D12App.cpp" />
-    <ClCompile Include="Timer.cpp" />
-    <ClCompile Include="Win32Application.cpp" />
+    <ClCompile Include="CommonDX\Private\DXSample.cpp" />
+    <ClCompile Include="Utility\Private\Input.cpp" />
+    <ClCompile Include="Source\Main.cpp" />
+    <ClCompile Include="Utility\Private\MathHelper.cpp" />
+    <ClCompile Include="Source\MyD3D12App.cpp" />
+    <ClCompile Include="Utility\Private\Timer.cpp" />
+    <ClCompile Include="CommonDX\Private\Win32Application.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
-    <CustomBuild Include="shaders.hlsl">
+    <CustomBuild Include="Shaders\shaders.hlsl">
       <FileType>Document</FileType>
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</DeploymentContent>
       <TreatOutputAsContent Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</TreatOutputAsContent>

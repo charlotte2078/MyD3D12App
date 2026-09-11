@@ -1,9 +1,9 @@
 // Based on code from Microsoft
 // https://github.com/microsoft/DirectX-Graphics-Samples/blob/master/Samples/Desktop/D3D12HelloWorld/src/HelloWindow/Win32Application.cpp
 
-#include "Win32Application.h"
-#include "Input.h"
-#include "Timer.h"
+#include "CommonDX/Public/Win32Application.h"
+#include "Utility/Public/Input.h"
+#include "Utility/Public/Timer.h"
 
 HWND Win32Application::mhWnd = nullptr;
 

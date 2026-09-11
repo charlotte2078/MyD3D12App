@@ -1,8 +1,8 @@
 // Based on code from Microsoft
 // https://github.com/microsoft/DirectX-Graphics-Samples/blob/master/Samples/Desktop/D3D12HelloWorld/src/HelloWindow/DXSample.cpp
 
-#include "DXSample.h"
-#include "Win32Application.h"
+#include "CommonDX/Public/DXSample.h"
+#include "CommonDX/Public/Win32Application.h"
 
 using namespace Microsoft::WRL;
 
