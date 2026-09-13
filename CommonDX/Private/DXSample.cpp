@@ -1,8 +1,8 @@
 // Based on code from Microsoft
 // https://github.com/microsoft/DirectX-Graphics-Samples/blob/master/Samples/Desktop/D3D12HelloWorld/src/HelloWindow/DXSample.cpp
 
-#include "DXSample.h"
-#include "Win32Application.h"
+#include "CommonDX/Public/DXSample.h"
+#include "CommonDX/Public/Win32Application.h"
 
 using namespace Microsoft::WRL;
 
@@ -13,7 +13,7 @@ DXSample::DXSample(UINT width, UINT height, std::wstring name) :
 	mUseWarpDevice(false)
 {
 	WCHAR assetsPath[512];
-	GetAssetsPath(assetsPath, _countof(assetsPath));
+	DXHelpers::GetAssetsPath(assetsPath, _countof(assetsPath));
 	mAssetsPath = assetsPath;
 
 	mAspectRatio = static_cast<float>(width) / static_cast<float>(height);
