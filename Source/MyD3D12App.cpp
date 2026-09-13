@@ -1,6 +1,8 @@
 #include "CommonDX/Public/Includes.h"
 #include "MyD3D12App.h"
 
+using DXHelpers::ThrowIfFailed;
+
 MyD3D12App::MyD3D12App(UINT width, UINT height, std::wstring name) :
 	DXSample(width, height, name),
 	mFrameIndex(0),
@@ -177,7 +179,8 @@ void MyD3D12App::PopulateCommandList()
 	mCommandList->RSSetViewports(1, &mViewport);
 	mCommandList->RSSetScissorRects(1, &mScissorRect);
 
-	mCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(mRenderTargets[mFrameIndex].Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET));
+	CD3DX12_RESOURCE_BARRIER rbTransitionPresentRT = CD3DX12_RESOURCE_BARRIER::Transition(mRenderTargets[mFrameIndex].Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
+	mCommandList->ResourceBarrier(1, &rbTransitionPresentRT);
 
 	CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(mRtvHeap->GetCPUDescriptorHandleForHeapStart(), mFrameIndex, mRtvDescriptorSize);
 	mCommandList->OMSetRenderTargets(1, &rtvHandle, FALSE, nullptr);
@@ -188,7 +191,8 @@ void MyD3D12App::PopulateCommandList()
 	mCommandList->IASetVertexBuffers(0, 1, &mVertexBufferView);
 	mCommandList->DrawInstanced(3, 1, 0, 0);
 
-	mCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(mRenderTargets[mFrameIndex].Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT));
+	CD3DX12_RESOURCE_BARRIER rbTransitionRTPresent = CD3DX12_RESOURCE_BARRIER::Transition(mRenderTargets[mFrameIndex].Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
+	mCommandList->ResourceBarrier(1, &rbTransitionRTPresent);
 
 	ThrowIfFailed(mCommandList->Close());
 }
@@ -264,17 +268,22 @@ void MyD3D12App::CreateRootSignature()
 // Create the pipeline state (compile and load shaders)
 void MyD3D12App::CreatePSO()
 {
-	ComPtr<ID3DBlob> vertexShader;
-	ComPtr<ID3DBlob> pixelShader;
+	//ComPtr<ID3DBlob> vertexShader;
+	//ComPtr<ID3DBlob> pixelShader;
 
-#if defined(_DEBUG)
-	UINT compileFlags = D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION;
+#if defined(DEBUG) || defined(_DEBUG)  
+#define COMMA_DEBUG_ARGS ,DXC_ARG_DEBUG, DXC_ARG_SKIP_OPTIMIZATIONS
 #else
-	UINT compileFlags = 0;
+#define COMMA_DEBUG_ARGS
 #endif
 
-	ThrowIfFailed(D3DCompileFromFile(L"shaders.hlsl", nullptr, nullptr, "VSMain", "vs_5_0", compileFlags, 0, &vertexShader, nullptr));
-	ThrowIfFailed(D3DCompileFromFile(L"shaders.hlsl", nullptr, nullptr, "PSMain", "ps_5_0", compileFlags, 0, &pixelShader, nullptr));
+	std::vector<LPCWSTR> vsArgs = { L"-E VSMain", L"-T vs_6_6" COMMA_DEBUG_ARGS};
+	ComPtr<IDxcBlob> vertexShader = DXHelpers::CompileShader(L"Shaders\\shaders.hlsl", vsArgs);
+	//ThrowIfFailed(D3DCompileFromFile(L"shaders.hlsl", nullptr, nullptr, "VSMain", "vs_5_0", compileFlags, 0, &vertexShader, nullptr));
+
+	std::vector<LPCWSTR> psArgs = { L"-E PSMain", L"-T ps_6_6" COMMA_DEBUG_ARGS};
+	ComPtr<IDxcBlob> pixelShader = DXHelpers::CompileShader(L"Shaders\\shaders.hlsl", psArgs);
+	//ThrowIfFailed(D3DCompileFromFile(L"shaders.hlsl", nullptr, nullptr, "PSMain", "ps_5_0", compileFlags, 0, &pixelShader, nullptr));
 
 	// Define the vertex input layout
 	D3D12_INPUT_ELEMENT_DESC inputElementDescs[] =
@@ -287,8 +296,8 @@ void MyD3D12App::CreatePSO()
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};
 	psoDesc.InputLayout = { inputElementDescs, _countof(inputElementDescs) };
 	psoDesc.pRootSignature = mRootSignature.Get();
-	psoDesc.VS = CD3DX12_SHADER_BYTECODE(vertexShader.Get());
-	psoDesc.PS = CD3DX12_SHADER_BYTECODE(pixelShader.Get());
+	psoDesc.VS = DXHelpers::ByteCodeFromBlob(vertexShader.Get());
+	psoDesc.PS = DXHelpers::ByteCodeFromBlob(pixelShader.Get());
 	psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
 	psoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
 	psoDesc.DepthStencilState.DepthEnable = FALSE;
@@ -319,10 +328,13 @@ void MyD3D12App::CreateVertexBuffer()
 	// recommended. Every time the GPU needs it, the upload heap will be marshalled 
 	// over. Please read up on Default Heap usage. An upload heap is used here for 
 	// code simplicity and because there are very few verts to actually transfer.
+	auto heapProperties = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
+	auto heapDesc = CD3DX12_RESOURCE_DESC::Buffer(vertexBufferSize);
+
 	ThrowIfFailed(mDevice->CreateCommittedResource(
-		&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
+		&heapProperties,
 		D3D12_HEAP_FLAG_NONE,
-		&CD3DX12_RESOURCE_DESC::Buffer(vertexBufferSize),
+		&heapDesc,
 		D3D12_RESOURCE_STATE_GENERIC_READ,
 		nullptr,
 		IID_PPV_ARGS(&mVertexBuffer)));
