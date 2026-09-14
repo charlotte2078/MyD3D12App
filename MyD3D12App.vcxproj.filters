@@ -44,6 +44,12 @@
     <ClInclude Include="Source\MyD3D12App.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="CommonDX\Public\FrameResource.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="CommonDX\Public\UploadBuffer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\Main.cpp">

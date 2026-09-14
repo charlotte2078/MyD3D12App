@@ -5,6 +5,8 @@
 
 #include "CommonDX/Public/DXSample.h"
 #include "Utility/Public/MathHelper.h"
+#include <CommonDX/Public/UploadBuffer.h>
+#include <CommonDX//Public/FrameResource.h>
 
 using namespace DirectX;
 using Microsoft::WRL::ComPtr;
@@ -29,7 +31,7 @@ public:
 
 private:
 	// The number of buffers in the swap chain
-	static const UINT FrameCount = 2;
+	static constexpr UINT gFrameCount = 2;
 
 	// Specifies the information each vertex will hold
 	struct Vertex
@@ -48,7 +50,7 @@ private:
 	CD3DX12_RECT mScissorRect;
 	ComPtr<IDXGISwapChain3> mSwapChain;
 	ComPtr<ID3D12Device> mDevice;
-	ComPtr<ID3D12Resource> mRenderTargets[FrameCount];
+	ComPtr<ID3D12Resource> mRenderTargets[gFrameCount];
 	ComPtr<ID3D12CommandAllocator> mCommandAllocator;
 	ComPtr<ID3D12CommandQueue> mCommandQueue;
 	ComPtr<ID3D12RootSignature> mRootSignature;
@@ -58,7 +60,8 @@ private:
 	UINT mRtvDescriptorSize;
 
 	// App resources
-	ComPtr<ID3D12Resource> mVertexBuffer;
+	//ComPtr<ID3D12Resource> mVertexBuffer;
+	std::unique_ptr<UploadBuffer<Vertex>> mVertexBuffer;
 	D3D12_VERTEX_BUFFER_VIEW mVertexBufferView;
 
 	// Synchronisation objects
@@ -66,6 +69,12 @@ private:
 	HANDLE mFenceEvent;
 	ComPtr<ID3D12Fence> mFence;
 	UINT64 mFenceValue;
+
+	// Frame resources
+	static constexpr int gNumFrameResources = 3;
+	std::vector<std::unique_ptr<FrameResource>> mFrameResources;
+	FrameResource* mCurrFrameResource = nullptr;
+	int mCurrFrameResourceIndex = 0;
 
 	void LoadPipeline();
 	void LoadAssets();

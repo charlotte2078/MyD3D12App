@@ -148,6 +148,8 @@
   <ItemGroup>
     <ClInclude Include="CommonDX\Public\DXSampleHelper.h" />
     <ClInclude Include="CommonDX\Public\DXSample.h" />
+    <ClInclude Include="CommonDX\Public\FrameResource.h" />
+    <ClInclude Include="CommonDX\Public\UploadBuffer.h" />
     <ClInclude Include="Utility\Public\Input.h" />
     <ClInclude Include="Utility\Public\MathHelper.h" />
     <ClInclude Include="Source\MyD3D12App.h" />

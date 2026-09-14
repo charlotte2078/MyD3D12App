@@ -80,7 +80,7 @@ void MyD3D12App::LoadPipeline()
 
 	// Describe and create the swap chain
 	DXGI_SWAP_CHAIN_DESC1 swapChainDesc = {};
-	swapChainDesc.BufferCount = FrameCount; // The number of buffers in the swap chain
+	swapChainDesc.BufferCount = gFrameCount; // The number of buffers in the swap chain
 	swapChainDesc.Width = mWidth; // resolution width
 	swapChainDesc.Height = mHeight; // Resolution height
 	swapChainDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM; // 32-bit unsigned-normalized-integer format
@@ -224,7 +224,7 @@ void MyD3D12App::CreateDescriptorHeaps()
 {
 	// Describe and create an RTV (render target view) descriptor heap
 	D3D12_DESCRIPTOR_HEAP_DESC rtvHeapDesc = {};
-	rtvHeapDesc.NumDescriptors = FrameCount;
+	rtvHeapDesc.NumDescriptors = gFrameCount;
 	rtvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
 	rtvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
 	ThrowIfFailed(mDevice->CreateDescriptorHeap(&rtvHeapDesc, IID_PPV_ARGS(&mRtvHeap)));
@@ -239,7 +239,7 @@ void MyD3D12App::CreateFrameResouces()
 	CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(mRtvHeap->GetCPUDescriptorHandleForHeapStart());
 
 	// Create an RTV for each frame
-	for (UINT n = 0; n < FrameCount; n++)
+	for (UINT n = 0; n < gFrameCount; n++)
 	{
 		ThrowIfFailed(mSwapChain->GetBuffer(n, IID_PPV_ARGS(&mRenderTargets[n])));
 		mDevice->CreateRenderTargetView(mRenderTargets[n].Get(), nullptr, rtvHandle);
@@ -314,40 +314,30 @@ void MyD3D12App::CreatePSO()
 // Create the vertex buffer (also define geometry)
 void MyD3D12App::CreateVertexBuffer()
 {
+	constexpr int numTriangleVertices = 3;
+
 	// Define our geometry
-	Vertex triangleVertices[] =
+	Vertex triangleVertices[numTriangleVertices] =
 	{
 		{ { 0.0f, 0.25f * mAspectRatio, 0.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } },
 		{ { 0.25f, -0.25f * mAspectRatio, 0.0f }, { 0.0f, 1.0f, 0.0f, 1.0f } },
 		{ { -0.25f, -0.25f * mAspectRatio, 0.0f }, { 0.0f, 0.0f, 1.0f, 1.0f } }
 	};
 
-	const UINT vertexBufferSize = sizeof(triangleVertices);
-
 	// Note: using upload heaps to transfer static data like vert buffers is not 
 	// recommended. Every time the GPU needs it, the upload heap will be marshalled 
 	// over. Please read up on Default Heap usage. An upload heap is used here for 
-	// code simplicity and because there are very few verts to actually transfer.
-	auto heapProperties = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
-	auto heapDesc = CD3DX12_RESOURCE_DESC::Buffer(vertexBufferSize);
-
-	ThrowIfFailed(mDevice->CreateCommittedResource(
-		&heapProperties,
-		D3D12_HEAP_FLAG_NONE,
-		&heapDesc,
-		D3D12_RESOURCE_STATE_GENERIC_READ,
-		nullptr,
-		IID_PPV_ARGS(&mVertexBuffer)));
+	// code simplicity and because there are very few verts to actually transfer
+	mVertexBuffer = std::make_unique<UploadBuffer<Vertex>>(mDevice.Get(), static_cast<UINT>(numTriangleVertices), false);
 
 	// Copy the triangle data to the vertex buffer
-	UINT8* pVertexDataBegin;
-	CD3DX12_RANGE readRange(0, 0);
-	ThrowIfFailed(mVertexBuffer->Map(0, &readRange, reinterpret_cast<void**>(&pVertexDataBegin)));
-	memcpy(pVertexDataBegin, triangleVertices, sizeof(triangleVertices));
-	mVertexBuffer->Unmap(0, nullptr);
+	for (int vertexIndex = 0; vertexIndex < numTriangleVertices; ++vertexIndex)
+	{
+		mVertexBuffer->CopyData(vertexIndex, triangleVertices[vertexIndex]);
+	}
 
 	// Initialise the vertex buffer view
-	mVertexBufferView.BufferLocation = mVertexBuffer->GetGPUVirtualAddress();
+	mVertexBufferView.BufferLocation = mVertexBuffer->Resource()->GetGPUVirtualAddress();
 	mVertexBufferView.StrideInBytes = sizeof(Vertex);
-	mVertexBufferView.SizeInBytes = vertexBufferSize;
+	mVertexBufferView.SizeInBytes = sizeof(triangleVertices);
 }
