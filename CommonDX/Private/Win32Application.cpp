@@ -109,15 +109,9 @@ LRESULT CALLBACK Win32Application::WndProc(HWND hWnd, UINT msg, WPARAM wParam, L
 		PostQuitMessage(0);
 		return 0;
 	}
-	// Deal with window painting - where updating/rendering is done
+	// Deal with window painting
 	case WM_PAINT:
 	{
-		/*if (pSample)
-		{
-			pSample->OnUpdate();
-			pSample->OnRender();
-			return 0;
-		}*/
 		PAINTSTRUCT ps;
 		HDC hdc = BeginPaint(hWnd, &ps);
 		EndPaint(hWnd, &ps);
