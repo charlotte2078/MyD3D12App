@@ -1,5 +1,6 @@
-#include "CommonDX/Public/Includes.h"
 #include "MyD3D12App.h"
+
+#include <CommonDX/Public/Win32Application.h>
 
 using DXHelpers::ThrowIfFailed;
 
@@ -7,8 +8,7 @@ MyD3D12App::MyD3D12App(UINT width, UINT height, std::wstring name) :
 	DXSample(width, height, name),
 	mFrameIndex(0),
 	mViewport(0.0f, 0.0f, static_cast<float>(width), static_cast<float>(height)),
-	mScissorRect(0, 0, static_cast<LONG>(width), static_cast<LONG>(height)),
-	mRtvDescriptorSize(0)
+	mScissorRect(0, 0, static_cast<LONG>(width), static_cast<LONG>(height))
 {
 }
 
@@ -42,7 +42,7 @@ void MyD3D12App::LoadPipeline()
 #endif
 
 	// Create the DXGI factory - which enables creating DXGI objects (e.g. swap chain)
-	ComPtr<IDXGIFactory4> factory;
+	ComPtr<IDXGIFactory6> factory;
 	ThrowIfFailed(CreateDXGIFactory2(dxgiFactoryFlags, IID_PPV_ARGS(&factory)));
 
 	if (mUseWarpDevice)
@@ -69,45 +69,18 @@ void MyD3D12App::LoadPipeline()
 			IID_PPV_ARGS(&mDevice))); // COM ID of the Device to create and the pDevice
 	}
 
-	// Describe and create the command queue
-	// The command queue holds commands the GPU will execute, which are submitted by the CPU
-	// using command lists
-	D3D12_COMMAND_QUEUE_DESC queueDesc = {};
-	queueDesc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE; // Default commnad queue (GPU Timeout enabled)
-	queueDesc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT; // A command buffer that the GPU can execute
+	CreateCommandObjects();
 
-	ThrowIfFailed(mDevice->CreateCommandQueue(&queueDesc, IID_PPV_ARGS(&mCommandQueue)));
-
-	// Describe and create the swap chain
-	DXGI_SWAP_CHAIN_DESC1 swapChainDesc = {};
-	swapChainDesc.BufferCount = gFrameCount; // The number of buffers in the swap chain
-	swapChainDesc.Width = mWidth; // resolution width
-	swapChainDesc.Height = mHeight; // Resolution height
-	swapChainDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM; // 32-bit unsigned-normalized-integer format
-	swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT; // Rendering to the back buffer
-	swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD; // discard pixels after presenting
-	swapChainDesc.SampleDesc.Count = 1; // The number of multisamples (single sampling here)
-
-	ComPtr<IDXGISwapChain1> swapChain;
-	ThrowIfFailed(factory->CreateSwapChainForHwnd(
-		mCommandQueue.Get(), // Pointer to the command queue
-		Win32Application::GetHwnd(), // Window Handler
-		&swapChainDesc, // Pointer to the swap chain description
-		nullptr, // Pointer to the full screen window swap chain description
-		nullptr, // Pointer to the IDXGIOutput interface to restrict content to
-		&swapChain)); // Output pp for the swap chain
+	CreateSwapChain(factory.Get());
 	
 	// This prevents the window from responding to alt-enter (which makes the window fullscreen)
 	ThrowIfFailed(factory->MakeWindowAssociation(Win32Application::GetHwnd(), DXGI_MWA_NO_ALT_ENTER));
-
-	ThrowIfFailed(swapChain.As(&mSwapChain)); // Check we can use the IDXGISwapChain1 as an IDXGISwapChain3
-	mFrameIndex = mSwapChain->GetCurrentBackBufferIndex(); // Introduced in IDSGISwapChain3
 
 	// Create an rtv descriptor heap then use that to create an RTV for each frame
 	CreateDescriptorHeaps();
 	CreateFrameResouces();
 
-	ThrowIfFailed(mDevice->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&mCommandAllocator)));
+	
 }
 
 void MyD3D12App::LoadAssets()
@@ -115,8 +88,8 @@ void MyD3D12App::LoadAssets()
 	CreateRootSignature();
 	CreatePSO();
 		
-	// Create the command list
-	ThrowIfFailed(mDevice->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, mCommandAllocator.Get(), mPipelineState.Get(), IID_PPV_ARGS(&mCommandList)));
+	// Bind the PSO to the command list
+	mCommandList->SetPipelineState(mPipelineState.Get());
 
 	// Close the command list (the command list is created in the recording state
 	ThrowIfFailed(mCommandList->Close());
@@ -128,13 +101,6 @@ void MyD3D12App::LoadAssets()
 		ThrowIfFailed(mDevice->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&mFence)));
 		mFenceValue = 1;
 
-		// Create an event handle to use for frame synchronisation
-		mFenceEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
-		if (mFenceEvent == nullptr)
-		{
-			ThrowIfFailed(HRESULT_FROM_WIN32(GetLastError()));
-		}
-
 		// Wait for command list to execute
 		WaitForPreviousFrame();
 	}
@@ -143,12 +109,20 @@ void MyD3D12App::LoadAssets()
 // Update frame based values
 void MyD3D12App::OnUpdate(const float deltaTime)
 {
-
+	if (mAppPaused)
+	{
+		return;
+	}
 }
 
 // Render the scene
 void MyD3D12App::OnRender()
 {
+	if (mAppPaused)
+	{
+		return;
+	}
+
 	// Record all the commands we need to render teh scene into the command list
 	PopulateCommandList();
 
@@ -162,11 +136,65 @@ void MyD3D12App::OnRender()
 	WaitForPreviousFrame();
 }
 
+void MyD3D12App::OnResize()
+{
+	assert(mDevice);
+	assert(mSwapChain);
+	assert(mCommandAllocator);
+
+	// Flush before changing any resources.
+	FlushCommandQueue();
+
+	ThrowIfFailed(mCommandList->Reset(mCommandAllocator.Get(), nullptr));
+
+	// Release the previous resources we will be recreating.
+	for (int i = 0; i < gFrameCount; ++i)
+	{
+		mRenderTargets[i].Reset();
+	}
+
+	// Resize the swap chain.
+	ThrowIfFailed(mSwapChain->ResizeBuffers(
+		gFrameCount,
+		mWidth, mHeight,
+		mkSwapChainFormat,
+		DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH));
+
+	mFrameIndex = 0;
+
+	for (UINT i = 0; i < gFrameCount; ++i)
+	{
+		ThrowIfFailed(mSwapChain->GetBuffer(i, IID_PPV_ARGS(&mRenderTargets[i])));
+
+		mDevice->CreateRenderTargetView(
+			mRenderTargets[i].Get(),
+			nullptr,
+			mRtvHeap.CpuHandle(i));
+	}
+
+	// Execute the resize commands.
+	ThrowIfFailed(mCommandList->Close());
+	ID3D12CommandList* cmdsLists[] = { mCommandList.Get() };
+	mCommandQueue->ExecuteCommandLists(_countof(cmdsLists), cmdsLists);
+
+	// Wait until resize is complete.
+	FlushCommandQueue();
+
+	// Update the viewport transform to cover the client area.
+	mViewport.TopLeftX = 0;
+	mViewport.TopLeftY = 0;
+	mViewport.Width = static_cast<float>(mWidth);
+	mViewport.Height = static_cast<float>(mHeight);
+
+	mScissorRect.left = 0;
+	mScissorRect.top = 0;
+	mScissorRect.right = mWidth;
+	mScissorRect.bottom = mHeight;
+}
+
 void MyD3D12App::OnDestroy()
 {
 	WaitForPreviousFrame();
-
-	CloseHandle(mFenceEvent);
 }
 
 void MyD3D12App::PopulateCommandList()
@@ -182,7 +210,7 @@ void MyD3D12App::PopulateCommandList()
 	CD3DX12_RESOURCE_BARRIER rbTransitionPresentRT = CD3DX12_RESOURCE_BARRIER::Transition(mRenderTargets[mFrameIndex].Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
 	mCommandList->ResourceBarrier(1, &rbTransitionPresentRT);
 
-	CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(mRtvHeap->GetCPUDescriptorHandleForHeapStart(), mFrameIndex, mRtvDescriptorSize);
+	auto rtvHandle = mRtvHeap.CpuHandle(mFrameIndex);
 	mCommandList->OMSetRenderTargets(1, &rtvHandle, FALSE, nullptr);
 
 	const float clearColour[] = { 0.0f, 0.2f, 0.4f, 1.0f };
@@ -204,46 +232,89 @@ void MyD3D12App::WaitForPreviousFrame()
 	// sample illustrates how to use fences for efficient resource usage and to
 	// maximize GPU utilization.
 
-	// Signal and increment the fence value.
-	const UINT64 fence = mFenceValue;
-	ThrowIfFailed(mCommandQueue->Signal(mFence.Get(), fence));
-	mFenceValue++;
-
-	// Wait until the previous frame is finished.
-	if (mFence->GetCompletedValue() < fence)
-	{
-		ThrowIfFailed(mFence->SetEventOnCompletion(fence, mFenceEvent));
-		WaitForSingleObject(mFenceEvent, INFINITE);
-	}
+	FlushCommandQueue();
 
 	mFrameIndex = mSwapChain->GetCurrentBackBufferIndex();
+}
+
+void MyD3D12App::FlushCommandQueue()
+{
+	const UINT64 fence = mFenceValue;
+	ThrowIfFailed(mCommandQueue->Signal(mFence.Get(), fence));
+	++mFenceValue;
+
+	// Wait until the GPU has completed commands up to this fence point.
+	if (mFence->GetCompletedValue() < fence)
+	{
+		HANDLE eventHandle = CreateEventEx(nullptr, nullptr, 0, EVENT_ALL_ACCESS);
+
+		// Fire event when GPU hits current fence.  
+		ThrowIfFailed(mFence->SetEventOnCompletion(fence, eventHandle));
+
+		// Wait until the GPU hits current fence event is fired.
+		WaitForSingleObject(eventHandle, INFINITE);
+		CloseHandle(eventHandle);
+	}
+}
+
+void MyD3D12App::CreateCommandObjects()
+{
+	// Describe and create the command queue
+	// The command queue holds commands the GPU will execute, which are submitted by the CPU
+	// using command lists
+	D3D12_COMMAND_QUEUE_DESC queueDesc = {};
+	queueDesc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE; // Default commnad queue (GPU Timeout enabled)
+	queueDesc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT; // A command buffer that the GPU can execute
+
+	ThrowIfFailed(mDevice->CreateCommandQueue(&queueDesc, IID_PPV_ARGS(&mCommandQueue)));
+
+	ThrowIfFailed(mDevice->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&mCommandAllocator)));
+
+	ThrowIfFailed(mDevice->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, mCommandAllocator.Get(), nullptr, IID_PPV_ARGS(&mCommandList)));
+}
+
+void MyD3D12App::CreateSwapChain(IDXGIFactory6* factory)
+{
+	assert(factory);
+
+	// Describe and create the swap chain
+	DXGI_SWAP_CHAIN_DESC1 swapChainDesc = {};
+	swapChainDesc.BufferCount = gFrameCount; // The number of buffers in the swap chain
+	swapChainDesc.Width = mWidth; // resolution width
+	swapChainDesc.Height = mHeight; // Resolution height
+	swapChainDesc.Format = mkSwapChainFormat; 
+	swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT; // Rendering to the back buffer
+	swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD; // discard pixels after presenting
+	swapChainDesc.SampleDesc.Count = 1; // The number of multisamples (single sampling here)
+
+	ComPtr<IDXGISwapChain1> swapChain;
+	ThrowIfFailed(factory->CreateSwapChainForHwnd(
+		mCommandQueue.Get(), // Pointer to the command queue
+		Win32Application::GetHwnd(), // Window Handler
+		&swapChainDesc, // Pointer to the swap chain description
+		nullptr, // Pointer to the full screen window swap chain description
+		nullptr, // Pointer to the IDXGIOutput interface to restrict content to
+		&swapChain)); // Output pp for the swap chain
+
+	ThrowIfFailed(swapChain.As(&mSwapChain)); // Check we can use the IDXGISwapChain1 as an IDXGISwapChain3
+	mFrameIndex = mSwapChain->GetCurrentBackBufferIndex(); // Introduced in IDSGISwapChain3
 }
 
 // Create desctiptor heaps
 void MyD3D12App::CreateDescriptorHeaps()
 {
-	// Describe and create an RTV (render target view) descriptor heap
-	D3D12_DESCRIPTOR_HEAP_DESC rtvHeapDesc = {};
-	rtvHeapDesc.NumDescriptors = gFrameCount;
-	rtvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
-	rtvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
-	ThrowIfFailed(mDevice->CreateDescriptorHeap(&rtvHeapDesc, IID_PPV_ARGS(&mRtvHeap)));
-
-	mRtvDescriptorSize = mDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+	mRtvHeap.Init(mDevice.Get(), D3D12_DESCRIPTOR_HEAP_TYPE_RTV, gFrameCount);
 }
 
 // Create resources needed for each frame.
 // Here need an RTV.
 void MyD3D12App::CreateFrameResouces()
 {
-	CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(mRtvHeap->GetCPUDescriptorHandleForHeapStart());
-
 	// Create an RTV for each frame
-	for (UINT n = 0; n < gFrameCount; n++)
+	for (UINT i = 0; i < gFrameCount; ++i)
 	{
-		ThrowIfFailed(mSwapChain->GetBuffer(n, IID_PPV_ARGS(&mRenderTargets[n])));
-		mDevice->CreateRenderTargetView(mRenderTargets[n].Get(), nullptr, rtvHandle);
-		rtvHandle.Offset(1, mRtvDescriptorSize);
+		ThrowIfFailed(mSwapChain->GetBuffer(i, IID_PPV_ARGS(&mRenderTargets[i])));
+		mDevice->CreateRenderTargetView(mRenderTargets[i].Get(), nullptr, mRtvHeap.CpuHandle(i));
 	}
 }
 

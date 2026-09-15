@@ -4,9 +4,10 @@
 #pragma once
 
 #include "CommonDX/Public/DXSample.h"
-#include "Utility/Public/MathHelper.h"
 #include <CommonDX/Public/UploadBuffer.h>
-#include <CommonDX//Public/FrameResource.h>
+#include <CommonDX/Public/DescriptorHeap.h>
+#include "Utility/Public/MathHelper.h"
+//#include <CommonDX//Public/FrameResource.h>
 
 using namespace DirectX;
 using Microsoft::WRL::ComPtr;
@@ -27,11 +28,13 @@ public:
 	virtual void OnInit() override;
 	virtual void OnUpdate(const float deltaTime) override;
 	virtual void OnRender() override;
+	virtual void OnResize() override;
 	virtual void OnDestroy() override;
 
 private:
 	// The number of buffers in the swap chain
 	static constexpr UINT gFrameCount = 2;
+	const DXGI_FORMAT mkSwapChainFormat = DXGI_FORMAT_R8G8B8A8_UNORM; // 32-bit unsigned-normalized-integer format
 
 	// Specifies the information each vertex will hold
 	struct Vertex
@@ -48,39 +51,45 @@ private:
 	// Pipeline objects
 	CD3DX12_VIEWPORT mViewport;
 	CD3DX12_RECT mScissorRect;
+
 	ComPtr<IDXGISwapChain3> mSwapChain;
 	ComPtr<ID3D12Device> mDevice;
-	ComPtr<ID3D12Resource> mRenderTargets[gFrameCount];
+
 	ComPtr<ID3D12CommandAllocator> mCommandAllocator;
 	ComPtr<ID3D12CommandQueue> mCommandQueue;
-	ComPtr<ID3D12RootSignature> mRootSignature;
-	ComPtr<ID3D12DescriptorHeap> mRtvHeap; // RTV = Render Target View
-	ComPtr<ID3D12PipelineState> mPipelineState;
 	ComPtr<ID3D12GraphicsCommandList> mCommandList;
-	UINT mRtvDescriptorSize;
+
+	ComPtr<ID3D12Resource> mRenderTargets[gFrameCount];
+	UINT mFrameIndex;
+
+	ComPtr<ID3D12RootSignature> mRootSignature;
+	ComPtr<ID3D12PipelineState> mPipelineState;
+
+	DescriptorHeap mRtvHeap;
+
+	ComPtr<ID3D12Fence> mFence;
+	UINT64 mFenceValue;
 
 	// App resources
 	//ComPtr<ID3D12Resource> mVertexBuffer;
 	std::unique_ptr<UploadBuffer<Vertex>> mVertexBuffer;
 	D3D12_VERTEX_BUFFER_VIEW mVertexBufferView;
 
-	// Synchronisation objects
-	UINT mFrameIndex;
-	HANDLE mFenceEvent;
-	ComPtr<ID3D12Fence> mFence;
-	UINT64 mFenceValue;
-
 	// Frame resources
-	static constexpr int gNumFrameResources = 3;
+	/*static constexpr int gNumFrameResources = 3;
 	std::vector<std::unique_ptr<FrameResource>> mFrameResources;
 	FrameResource* mCurrFrameResource = nullptr;
-	int mCurrFrameResourceIndex = 0;
+	int mCurrFrameResourceIndex = 0;*/
 
 	void LoadPipeline();
 	void LoadAssets();
 	void PopulateCommandList();
 	void WaitForPreviousFrame();
 
+	void FlushCommandQueue();
+
+	void CreateCommandObjects();
+	void CreateSwapChain(IDXGIFactory6* factory);
 	void CreateDescriptorHeaps();
 	void CreateFrameResouces();
 	void CreateRootSignature();
