@@ -115,3 +115,43 @@ _Use_decl_annotations_
 	}
 }
 
+void DXSample::StartTimer()
+{
+	mTimer.Start();
+}
+
+float DXSample::GetFrameTime()
+{
+	return mTimer.GetDeltaTime();
+}
+
+void DXSample::Pause(const bool pause)
+{
+	mAppPaused = pause;
+
+	if (pause)
+	{
+		mTimer.Stop();
+	}
+	else
+	{
+		mTimer.Start();
+	}
+}
+
+void DXSample::OnResizeStart()
+{
+	mAppPaused = true;
+	mResizing = true;
+	mTimer.Stop();
+}
+
+void DXSample::OnResizeEnd()
+{
+	mAppPaused = false;
+	mResizing = false;
+	mTimer.Start();
+
+	OnResize();
+}
+

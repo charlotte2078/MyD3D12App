@@ -2,6 +2,7 @@
 // https://github.com/microsoft/DirectX-Graphics-Samples/blob/master/Samples/Desktop/D3D12HelloWorld/src/HelloWindow/Win32Application.cpp
 
 #include "CommonDX/Public/Win32Application.h"
+#include "CommonDX/Public/DXSample.h"
 #include "Utility/Public/Input.h"
 #include "Utility/Public/Timer.h"
 
@@ -50,9 +51,7 @@ int Win32Application::Run(DXSample* pSample, HINSTANCE hInstance, int nCmdShow)
 
 	ShowWindow(mhWnd, nCmdShow);
 
-	// Start our timer here
-	Timer timer;
-	timer.Start();
+	pSample->StartTimer();
 
 	// Main sample loop
 	MSG msg = {};
@@ -68,7 +67,7 @@ int Win32Application::Run(DXSample* pSample, HINSTANCE hInstance, int nCmdShow)
 		else // When no windows messages left to process then render & update our scene
 		{
 			// Update frame time
-			float frameTime = timer.GetDeltaTime();
+			const float frameTime = pSample->GetFrameTime();
 			pSample->OnUpdate(frameTime);
 
 			// Draw scene
@@ -115,6 +114,39 @@ LRESULT CALLBACK Win32Application::WndProc(HWND hWnd, UINT msg, WPARAM wParam, L
 		PAINTSTRUCT ps;
 		HDC hdc = BeginPaint(hWnd, &ps);
 		EndPaint(hWnd, &ps);
+	}
+	// Handle pausing
+	case WM_ACTIVATE:
+	{
+		if (pSample)
+		{
+			if (LOWORD(wParam) == WA_INACTIVE)
+			{
+				pSample->Pause(true);
+			}
+			else
+			{
+				pSample->Pause(false);
+			}
+		}
+		return 0;
+	}
+	// Hnadle resizing
+	case WM_ENTERSIZEMOVE:
+	{
+		if (pSample)
+		{
+			pSample->OnResizeStart();
+		}
+		return 0;
+	}
+	case WM_EXITSIZEMOVE:
+	{
+		if (pSample)
+		{
+			pSample->OnResizeEnd();
+		}
+		return 0;
 	}
 	// Key down and key release events, see Input.h
 	case WM_KEYDOWN:
