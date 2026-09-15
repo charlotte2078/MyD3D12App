@@ -146,6 +146,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="CommonDX\Public\DescriptorHeap.h" />
     <ClInclude Include="CommonDX\Public\DXSampleHelper.h" />
     <ClInclude Include="CommonDX\Public\DXSample.h" />
     <ClInclude Include="CommonDX\Public\FrameResource.h" />
@@ -158,6 +159,7 @@
     <ClInclude Include="CommonDX\Public\Win32Application.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="CommonDX\Private\DescriptorHeap.cpp" />
     <ClCompile Include="CommonDX\Private\DXSample.cpp" />
     <ClCompile Include="Utility\Private\Input.cpp" />
     <ClCompile Include="Source\Main.cpp" />
