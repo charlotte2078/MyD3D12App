@@ -8,7 +8,8 @@ MyD3D12App::MyD3D12App(UINT width, UINT height, std::wstring name) :
 	DXSample(width, height, name),
 	mFrameIndex(0),
 	mViewport(0.0f, 0.0f, static_cast<float>(width), static_cast<float>(height)),
-	mScissorRect(0, 0, static_cast<LONG>(width), static_cast<LONG>(height))
+	mScissorRect(0, 0, static_cast<LONG>(width), static_cast<LONG>(height)),
+	mFenceValue(0)
 {
 }
 
@@ -80,7 +81,7 @@ void MyD3D12App::LoadPipeline()
 	CreateDescriptorHeaps();
 	CreateFrameResouces();
 
-	
+	CreateDepthStencilBuffer();
 }
 
 void MyD3D12App::LoadAssets()
@@ -211,10 +212,13 @@ void MyD3D12App::PopulateCommandList()
 	mCommandList->ResourceBarrier(1, &rbTransitionPresentRT);
 
 	auto rtvHandle = mRtvHeap.CpuHandle(mFrameIndex);
-	mCommandList->OMSetRenderTargets(1, &rtvHandle, FALSE, nullptr);
+	auto dsvHandle = mDsvHeap.CpuHandle(0);
+	mCommandList->OMSetRenderTargets(1, &rtvHandle, FALSE, &dsvHandle);
 
 	const float clearColour[] = { 0.0f, 0.2f, 0.4f, 1.0f };
 	mCommandList->ClearRenderTargetView(rtvHandle, clearColour, 0, nullptr);
+	mCommandList->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, nullptr);
+
 	mCommandList->IASetPrimitiveTopology(D3D10_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	mCommandList->IASetVertexBuffers(0, 1, &mVertexBufferView);
 	mCommandList->DrawInstanced(3, 1, 0, 0);
@@ -304,10 +308,59 @@ void MyD3D12App::CreateSwapChain(IDXGIFactory6* factory)
 void MyD3D12App::CreateDescriptorHeaps()
 {
 	mRtvHeap.Init(mDevice.Get(), D3D12_DESCRIPTOR_HEAP_TYPE_RTV, gFrameCount);
+	mDsvHeap.Init(mDevice.Get(), D3D12_DESCRIPTOR_HEAP_TYPE_DSV, 1);
+}
+
+void MyD3D12App::CreateDepthStencilBuffer()
+{
+	{
+		// Create the DSV
+		D3D12_RESOURCE_DESC depthStencilDesc;
+		depthStencilDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+		depthStencilDesc.Alignment = 0;
+		depthStencilDesc.Width = mWidth;
+		depthStencilDesc.Height = mHeight;
+		depthStencilDesc.DepthOrArraySize = 1;
+		depthStencilDesc.MipLevels = 1;
+		depthStencilDesc.Format = mkDepthStencilFormat;
+		depthStencilDesc.SampleDesc.Count = 1;
+		depthStencilDesc.SampleDesc.Quality = 0;
+		depthStencilDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
+		depthStencilDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
+
+		D3D12_CLEAR_VALUE optimisedClearValue;
+		optimisedClearValue.Format = mkDepthStencilFormat;
+		optimisedClearValue.DepthStencil.Depth = 1.0f;
+		optimisedClearValue.DepthStencil.Stencil = 0;
+
+		auto heapProps = D3D12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
+
+		ThrowIfFailed(mDevice->CreateCommittedResource(
+			&heapProps,
+			D3D12_HEAP_FLAG_NONE,
+			&depthStencilDesc,
+			D3D12_RESOURCE_STATE_COMMON,
+			&optimisedClearValue,
+			IID_PPV_ARGS(mDepthStencilBuffer.GetAddressOf())
+		));
+	}
+
+	mDevice->CreateDepthStencilView(
+		mDepthStencilBuffer.Get(),
+		nullptr,
+		mDsvHeap.CpuHandle(0)
+	);
+
+	auto rbDepthCommonDepthWrite = CD3DX12_RESOURCE_BARRIER::Transition(
+		mDepthStencilBuffer.Get(),
+		D3D12_RESOURCE_STATE_COMMON,
+		D3D12_RESOURCE_STATE_DEPTH_WRITE);
+
+	mCommandList->ResourceBarrier(1, &rbDepthCommonDepthWrite);
 }
 
 // Create resources needed for each frame.
-// Here need an RTV.
+// Here need an RTV and a depth stencil buffer
 void MyD3D12App::CreateFrameResouces()
 {
 	// Create an RTV for each frame
@@ -316,6 +369,8 @@ void MyD3D12App::CreateFrameResouces()
 		ThrowIfFailed(mSwapChain->GetBuffer(i, IID_PPV_ARGS(&mRenderTargets[i])));
 		mDevice->CreateRenderTargetView(mRenderTargets[i].Get(), nullptr, mRtvHeap.CpuHandle(i));
 	}
+
+	
 }
 
 // Create an empty root signature

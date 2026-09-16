@@ -34,7 +34,9 @@ public:
 private:
 	// The number of buffers in the swap chain
 	static constexpr UINT gFrameCount = 2;
+
 	const DXGI_FORMAT mkSwapChainFormat = DXGI_FORMAT_R8G8B8A8_UNORM; // 32-bit unsigned-normalized-integer format
+	const DXGI_FORMAT mkDepthStencilFormat = DXGI_FORMAT_D24_UNORM_S8_UINT; // 24-bits for depth and 8 bits for stencil
 
 	// Specifies the information each vertex will hold
 	struct Vertex
@@ -61,11 +63,13 @@ private:
 
 	ComPtr<ID3D12Resource> mRenderTargets[gFrameCount];
 	UINT mFrameIndex;
+	DescriptorHeap mRtvHeap;
 
 	ComPtr<ID3D12RootSignature> mRootSignature;
 	ComPtr<ID3D12PipelineState> mPipelineState;
 
-	DescriptorHeap mRtvHeap;
+	ComPtr<ID3D12Resource> mDepthStencilBuffer;
+	DescriptorHeap mDsvHeap;
 
 	ComPtr<ID3D12Fence> mFence;
 	UINT64 mFenceValue;
@@ -91,6 +95,7 @@ private:
 	void CreateCommandObjects();
 	void CreateSwapChain(IDXGIFactory6* factory);
 	void CreateDescriptorHeaps();
+	void CreateDepthStencilBuffer();
 	void CreateFrameResouces();
 	void CreateRootSignature();
 	void CreatePSO();
