@@ -2,8 +2,6 @@
 
 #include <CommonDX/Public/Win32Application.h>
 
-using DXHelpers::ThrowIfFailed;
-
 MyD3D12App::MyD3D12App(UINT width, UINT height, std::wstring name) :
 	DXSample(width, height, name),
 	mFrameIndex(0),

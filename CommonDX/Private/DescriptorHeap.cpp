@@ -11,7 +11,7 @@ void DescriptorHeap::Init(ID3D12Device* device, D3D12_DESCRIPTOR_HEAP_TYPE type,
 	heapDesc.NumDescriptors = capacity;
 	heapDesc.Type = type;
 	heapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE; // TODO : update this later when using for more types of heaps
-	DXHelpers::ThrowIfFailed(device->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(mHeap.GetAddressOf())));
+	ThrowIfFailed(device->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(mHeap.GetAddressOf())));
 
 	mDescriptorSize = device->GetDescriptorHandleIncrementSize(type);
 }

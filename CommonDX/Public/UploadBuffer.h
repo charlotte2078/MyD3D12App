@@ -21,7 +21,7 @@ public:
 			auto heapProperties = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
 			auto resourceDesc = CD3DX12_RESOURCE_DESC::Buffer(mElementByteSize * elementCount);
 
-			DXHelpers::ThrowIfFailed(device->CreateCommittedResource(
+			ThrowIfFailed(device->CreateCommittedResource(
 				&heapProperties,
 				D3D12_HEAP_FLAG_NONE,
 				&resourceDesc,
@@ -31,7 +31,7 @@ public:
 			));
 		}
 
-		DXHelpers::ThrowIfFailed(mUploadBuffer->Map(0, nullptr, reinterpret_cast<void**>(&mMappedData)));
+		ThrowIfFailed(mUploadBuffer->Map(0, nullptr, reinterpret_cast<void**>(&mMappedData)));
 	};
 
 	UploadBuffer(const UploadBuffer&) = delete;
