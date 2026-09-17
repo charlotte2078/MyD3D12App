@@ -37,7 +37,7 @@ private:
 		std::wstring wfn = DXHelpers::AnsiToWString(__FILE__);		\
 		if (FAILED(hr__))											\
 		{															\
-			throw DxException(hr__, L#x, wfn, __LINE__);	\
+			throw DxException(hr__, L#x, wfn, __LINE__);			\
 		}															\
 	}
 #endif
