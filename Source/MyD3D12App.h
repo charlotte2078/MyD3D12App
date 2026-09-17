@@ -4,9 +4,9 @@
 #pragma once
 
 #include "CommonDX/Public/DXSample.h"
-#include <CommonDX/Public/UploadBuffer.h>
 #include <CommonDX/Public/DescriptorHeap.h>
 #include "Utility/Public/MathHelper.h"
+#include <ResourceUploadBatch.h>
 //#include <CommonDX//Public/FrameResource.h>
 
 using namespace DirectX;
@@ -74,16 +74,12 @@ private:
 	ComPtr<ID3D12Fence> mFence;
 	UINT64 mFenceValue;
 
-	// App resources
-	//ComPtr<ID3D12Resource> mVertexBuffer;
-	std::unique_ptr<UploadBuffer<Vertex>> mVertexBuffer;
+	// Using a vertex and index buffer (and using a default heap)
+	ComPtr<ID3D12Resource> mVertexBufferGPU;
 	D3D12_VERTEX_BUFFER_VIEW mVertexBufferView;
-
-	// Frame resources
-	/*static constexpr int gNumFrameResources = 3;
-	std::vector<std::unique_ptr<FrameResource>> mFrameResources;
-	FrameResource* mCurrFrameResource = nullptr;
-	int mCurrFrameResourceIndex = 0;*/
+	ComPtr<ID3D12Resource> mIndexBufferGPU;
+	D3D12_INDEX_BUFFER_VIEW mIndexBufferView;
+	std::unique_ptr<DirectX::ResourceUploadBatch> mUploadBatch;
 
 	void LoadPipeline();
 	void LoadAssets();
@@ -99,6 +95,6 @@ private:
 	void CreateFrameResouces();
 	void CreateRootSignature();
 	void CreatePSO();
-	void CreateVertexBuffer();
+	void CreateVertexAndIndexBuffers();
 };
 

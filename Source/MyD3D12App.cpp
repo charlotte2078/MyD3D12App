@@ -1,6 +1,9 @@
 #include "MyD3D12App.h"
 
 #include <CommonDX/Public/Win32Application.h>
+#include <DirectXColors.h>
+#include <array>
+#include <BufferHelpers.h>
 
 MyD3D12App::MyD3D12App(UINT width, UINT height, std::wstring name) :
 	DXSample(width, height, name),
@@ -18,6 +21,9 @@ MyD3D12App::~MyD3D12App()
 void MyD3D12App::OnInit()
 {
 	LoadPipeline();
+
+	mUploadBatch = std::make_unique<DirectX::ResourceUploadBatch>(mDevice.Get());
+
 	LoadAssets();
 }
 
@@ -93,7 +99,7 @@ void MyD3D12App::LoadAssets()
 	// Close the command list (the command list is created in the recording state
 	ThrowIfFailed(mCommandList->Close());
 
-	CreateVertexBuffer();
+	CreateVertexAndIndexBuffers();
 
 	// Create synchronisation objects and wait until assets have been uploaded to the GPU
 	{
@@ -217,9 +223,10 @@ void MyD3D12App::PopulateCommandList()
 	mCommandList->ClearRenderTargetView(rtvHandle, clearColour, 0, nullptr);
 	mCommandList->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, nullptr);
 
-	mCommandList->IASetPrimitiveTopology(D3D10_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	mCommandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	mCommandList->IASetVertexBuffers(0, 1, &mVertexBufferView);
-	mCommandList->DrawInstanced(3, 1, 0, 0);
+	mCommandList->IASetIndexBuffer(&mIndexBufferView);
+	mCommandList->DrawIndexedInstanced(36, 1, 0, 0, 0);
 
 	CD3DX12_RESOURCE_BARRIER rbTransitionRTPresent = CD3DX12_RESOURCE_BARRIER::Transition(mRenderTargets[mFrameIndex].Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
 	mCommandList->ResourceBarrier(1, &rbTransitionRTPresent);
@@ -436,32 +443,78 @@ void MyD3D12App::CreatePSO()
 }
 
 // Create the vertex buffer (also define geometry)
-void MyD3D12App::CreateVertexBuffer()
+void MyD3D12App::CreateVertexAndIndexBuffers()
 {
-	constexpr int numTriangleVertices = 3;
+	constexpr int numCubeVertices = 8;
 
-	// Define our geometry
-	Vertex triangleVertices[numTriangleVertices] =
+	std::array<Vertex, numCubeVertices> cubeVertices =
 	{
-		{ { 0.0f, 0.25f * mAspectRatio, 0.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } },
-		{ { 0.25f, -0.25f * mAspectRatio, 0.0f }, { 0.0f, 1.0f, 0.0f, 1.0f } },
-		{ { -0.25f, -0.25f * mAspectRatio, 0.0f }, { 0.0f, 0.0f, 1.0f, 1.0f } }
+		Vertex({ -1.0f, -1.0f, -1.0f }, XMFLOAT4(Colors::AliceBlue)),
+		Vertex({ -1.0f, +1.0f, -1.0f }, XMFLOAT4(Colors::Bisque)),
+		Vertex({ +1.0f, +1.0f, -1.0f }, XMFLOAT4(Colors::DarkGreen)),
+		Vertex({ +1.0f, -1.0f, -1.0f }, XMFLOAT4(Colors::LightPink)),
+		Vertex({ -1.0f, -1.0f, +1.0f }, XMFLOAT4(Colors::Yellow)),
+		Vertex({ -1.0f, +1.0f, +1.0f }, XMFLOAT4(Colors::Aqua)),
+		Vertex({ +1.0f, +1.0f, +1.0f }, XMFLOAT4(Colors::Gold)),
+		Vertex({ +1.0f, -1.0f, +1.0f }, XMFLOAT4(Colors::MediumPurple))
 	};
 
-	// Note: using upload heaps to transfer static data like vert buffers is not 
-	// recommended. Every time the GPU needs it, the upload heap will be marshalled 
-	// over. Please read up on Default Heap usage. An upload heap is used here for 
-	// code simplicity and because there are very few verts to actually transfer
-	mVertexBuffer = std::make_unique<UploadBuffer<Vertex>>(mDevice.Get(), static_cast<UINT>(numTriangleVertices), false);
-
-	// Copy the triangle data to the vertex buffer
-	for (int vertexIndex = 0; vertexIndex < numTriangleVertices; ++vertexIndex)
+	std::array<std::uint16_t, 36> cubeIndices =
 	{
-		mVertexBuffer->CopyData(vertexIndex, triangleVertices[vertexIndex]);
-	}
+		// front face
+		0, 1, 2,
+		0, 2, 3,
 
-	// Initialise the vertex buffer view
-	mVertexBufferView.BufferLocation = mVertexBuffer->Resource()->GetGPUVirtualAddress();
+		// back face
+		4, 6, 5,
+		4, 7, 6,
+
+		// left face
+		4, 5, 1,
+		4, 1, 0,
+
+		// right face
+		3, 2, 6,
+		3, 6, 7,
+
+		// top face
+		1, 5, 6,
+		1, 6, 2,
+
+		// bottom face
+		4, 0, 3,
+		4, 3, 7
+	};
+
+	mUploadBatch->Begin(D3D12_COMMAND_LIST_TYPE_DIRECT);
+
+	CreateStaticBuffer(
+		mDevice.Get(),
+		*mUploadBatch,
+		cubeVertices.data(),
+		cubeVertices.size(),
+		sizeof(Vertex),
+		D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER,
+		&mVertexBufferGPU);
+
+	CreateStaticBuffer(
+		mDevice.Get(),
+		*mUploadBatch,
+		cubeIndices.data(),
+		cubeIndices.size(),
+		sizeof(std::uint16_t),
+		D3D12_RESOURCE_STATE_INDEX_BUFFER,
+		&mIndexBufferGPU);
+
+	std::future<void> result = mUploadBatch->End(mCommandQueue.Get());
+
+	result.wait(); // TODO: move this to somewhere else so that we can do CPU work in the meantime
+
+	mVertexBufferView.BufferLocation = mVertexBufferGPU->GetGPUVirtualAddress();
+	mVertexBufferView.SizeInBytes = cubeVertices.size() * sizeof(Vertex);
 	mVertexBufferView.StrideInBytes = sizeof(Vertex);
-	mVertexBufferView.SizeInBytes = sizeof(triangleVertices);
+
+	mIndexBufferView.BufferLocation = mIndexBufferGPU->GetGPUVirtualAddress();
+	mIndexBufferView.Format = DXGI_FORMAT_R16_UINT;
+	mIndexBufferView.SizeInBytes = cubeIndices.size() * sizeof(std::uint16_t);
 }
