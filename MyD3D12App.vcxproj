@@ -183,7 +183,6 @@
     <Import Project="packages\Microsoft.Direct3D.D3D12.1.614.1\build\native\Microsoft.Direct3D.D3D12.targets" Condition="Exists('packages\Microsoft.Direct3D.D3D12.1.614.1\build\native\Microsoft.Direct3D.D3D12.targets')" />
     <Import Project="packages\Microsoft.Direct3D.DXC.1.9.2607.13\build\native\Microsoft.Direct3D.DXC.targets" Condition="Exists('packages\Microsoft.Direct3D.DXC.1.9.2607.13\build\native\Microsoft.Direct3D.DXC.targets')" />
     <Import Project="packages\directxtk12_desktop_win10.2026.5.8.1\build\native\directxtk12_desktop_win10.targets" Condition="Exists('packages\directxtk12_desktop_win10.2026.5.8.1\build\native\directxtk12_desktop_win10.targets')" />
-    <Import Project="packages\directxmath.2026.6.12.1\build\native\directxmath.targets" Condition="Exists('packages\directxmath.2026.6.12.1\build\native\directxmath.targets')" />
   </ImportGroup>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
@@ -194,6 +193,5 @@
     <Error Condition="!Exists('packages\Microsoft.Direct3D.DXC.1.9.2607.13\build\native\Microsoft.Direct3D.DXC.props')" Text="$([System.String]::Format('$(ErrorText)', 'packages\Microsoft.Direct3D.DXC.1.9.2607.13\build\native\Microsoft.Direct3D.DXC.props'))" />
     <Error Condition="!Exists('packages\Microsoft.Direct3D.DXC.1.9.2607.13\build\native\Microsoft.Direct3D.DXC.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\Microsoft.Direct3D.DXC.1.9.2607.13\build\native\Microsoft.Direct3D.DXC.targets'))" />
     <Error Condition="!Exists('packages\directxtk12_desktop_win10.2026.5.8.1\build\native\directxtk12_desktop_win10.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\directxtk12_desktop_win10.2026.5.8.1\build\native\directxtk12_desktop_win10.targets'))" />
-    <Error Condition="!Exists('packages\directxmath.2026.6.12.1\build\native\directxmath.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\directxmath.2026.6.12.1\build\native\directxmath.targets'))" />
   </Target>
 </Project>
