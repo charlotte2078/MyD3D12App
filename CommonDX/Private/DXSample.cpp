@@ -4,6 +4,10 @@
 #include "CommonDX/Public/DXSample.h"
 #include "CommonDX/Public/Win32Application.h"
 
+// Required exports for Agility SDK
+extern "C" { __declspec(dllexport) extern const UINT D3D12SDKVersion = 614; }
+extern "C" { __declspec(dllexport) extern const char* D3D12SDKPath = ".\\D3D12\\"; }
+
 using namespace Microsoft::WRL;
 
 DXSample::DXSample(UINT width, UINT height, std::wstring name) :
