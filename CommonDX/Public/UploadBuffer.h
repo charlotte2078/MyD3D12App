@@ -13,7 +13,8 @@ class UploadBuffer
 {
 public:
 	UploadBuffer(ID3D12Device* device, UINT elementCount, bool isConstantBuffer) :
-		mIsConstantBuffer(isConstantBuffer)
+		mIsConstantBuffer(isConstantBuffer),
+		mElementCount(elementCount)
 	{
 		mElementByteSize = isConstantBuffer ? DXHelpers::CalculateConstantBufferByteSize(sizeof(T)) : sizeof(T);
 
@@ -54,13 +55,26 @@ public:
 
 	void CopyData(const int elementIndex, const T& data)
 	{
+		assert(elementIndex < mElementCount);
+
 		memcpy(&mMappedData[elementIndex * mElementByteSize], &data, sizeof(T));
+	}
+
+	UINT BufferByteSize() const
+	{
+		return mElementByteSize * mElementCount;
+	}
+
+	UINT ElementByteSize() const
+	{
+		return mElementByteSize;
 	}
 
 private:
 	Microsoft::WRL::ComPtr<ID3D12Resource> mUploadBuffer;
 	BYTE* mMappedData = nullptr;
 
+	UINT mElementCount = 0;
 	UINT mElementByteSize = 0;
 	bool mIsConstantBuffer = false;
 };
