@@ -53,6 +53,9 @@
     <ClInclude Include="CommonDX\Public\DescriptorHeap.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="CommonDX\Public\CbvSrvUavHeap.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\Main.cpp">
@@ -77,6 +80,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="CommonDX\Private\DescriptorHeap.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="CommonDX\Private\CbvSrvUavHeap.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
