@@ -7,6 +7,7 @@
 #include <CommonDX/Public/DescriptorHeap.h>
 #include "Utility/Public/MathHelper.h"
 #include <ResourceUploadBatch.h>
+#include <CommonDX/Public/UploadBuffer.h>
 //#include <CommonDX//Public/FrameResource.h>
 
 using namespace DirectX;
@@ -47,7 +48,12 @@ private:
 
 	struct ObjectConstants
 	{
-		XMFLOAT4X4 worldViewProj = MathHelper::Identity4x4();
+		XMFLOAT4X4 World = MathHelper::Identity4x4();
+	};
+
+	struct PassConstants
+	{
+		XMFLOAT4X4 ViewProj = MathHelper::Identity4x4();
 	};
 
 	// Pipeline objects
@@ -80,6 +86,14 @@ private:
 	ComPtr<ID3D12Resource> mIndexBufferGPU;
 	D3D12_INDEX_BUFFER_VIEW mIndexBufferView;
 	std::unique_ptr<DirectX::ResourceUploadBatch> mUploadBatch;
+
+	// Consant buffers
+	std::unique_ptr<UploadBuffer<ObjectConstants>> mObjectCB = nullptr;
+	std::unique_ptr<UploadBuffer<PassConstants>> mPassCB = nullptr;
+
+	XMFLOAT4X4 mWorld = MathHelper::Identity4x4();
+	XMFLOAT4X4 mView = MathHelper::Identity4x4();
+	XMFLOAT4X4 mProj = MathHelper::Identity4x4();
 
 	void LoadPipeline();
 	void LoadAssets();

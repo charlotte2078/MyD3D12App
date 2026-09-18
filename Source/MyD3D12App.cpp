@@ -118,6 +118,27 @@ void MyD3D12App::OnUpdate(const float deltaTime)
 	{
 		return;
 	}
+
+	// Update the world, view, and projection matrices
+	XMVECTOR pos = XMVectorSet(0.0f, 0.0f, -10.0f, 1.0f); // TODO: add a moveable camera
+	XMVECTOR target = XMVectorZero();
+	XMVECTOR up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
+	XMMATRIX view = XMMatrixLookAtLH(pos, target, up);
+	XMStoreFloat4x4(&mView, view);
+
+	XMMATRIX world = XMLoadFloat4x4(&mWorld);
+	XMMATRIX proj = XMLoadFloat4x4(&mProj);
+	XMMATRIX viewProj = view * proj;
+
+	// Update the per-object buffer
+	ObjectConstants objConstants;
+	XMStoreFloat4x4(&objConstants.World, XMMatrixTranspose(world));
+	mObjectCB->CopyData(0, objConstants);
+
+	// Update the per-pass buffer
+	PassConstants passConstants;
+	XMStoreFloat4x4(&passConstants.ViewProj, XMMatrixTranspose(viewProj));
+	mPassCB->CopyData(0, passConstants);
 }
 
 // Render the scene

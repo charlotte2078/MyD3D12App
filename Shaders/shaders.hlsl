@@ -1,5 +1,24 @@
-// Based on code by Microsoft
+// Based on code by Microsoft and Frank Luna
 // https://github.com/microsoft/DirectX-Graphics-Samples/blob/master/Samples/Desktop/D3D12HelloWorld/src/HelloTriangle/shaders.hlsl
+// Frank Luna DirectX 12 2ed pp. 232-240
+
+struct ObjectConstants
+{
+    float4x4 gWorld;
+};
+ConstantBuffer<ObjectConstants> gObjConstants : register(b0);
+
+struct PassConstants
+{
+    float4x4 gViewProj;
+};
+ConstantBuffer<ObjectConstants> gPassConstants : register(b0);
+
+struct VSInput
+{ 
+    float4 position : POSITION;
+    float4 color : COLOR;
+};
 
 struct PSInput
 {
@@ -8,12 +27,14 @@ struct PSInput
 };
 
 // Simple Vertex shader
-PSInput VSMain(float4 position : POSITION, float4 color : COLOR)
+PSInput VSMain(VSInput input)
 {
     PSInput result;
     
-    result.position = position;
-    result.color = color;
+    float4 worldPos = mul(input.position, gObjConstants.gWorld);
+    result.position = mul(worldPos, gPassConstants.gViewProj);
+    
+    result.color = input.color;
     
     return result;
 }
