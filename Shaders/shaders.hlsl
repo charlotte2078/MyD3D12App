@@ -12,7 +12,7 @@ struct PassConstants
 {
     float4x4 gViewProj;
 };
-ConstantBuffer<ObjectConstants> gPassConstants : register(b0);
+ConstantBuffer<PassConstants> gPassConstants : register(b1);
 
 struct VSInput
 { 

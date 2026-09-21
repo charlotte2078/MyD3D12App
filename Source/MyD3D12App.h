@@ -46,6 +46,7 @@ private:
 		XMFLOAT4 color;
 	};
 
+	// Constant buffer formats
 	struct ObjectConstants
 	{
 		XMFLOAT4X4 World = MathHelper::Identity4x4();
@@ -54,6 +55,13 @@ private:
 	struct PassConstants
 	{
 		XMFLOAT4X4 ViewProj = MathHelper::Identity4x4();
+	};
+
+	enum ROOT_ARG
+	{
+		ROOT_ARG_OBJECT_CBV = 0,
+		ROOT_ARG_PASS_CBV,
+		ROOT_ARG_COUNT
 	};
 
 	// Pipeline objects
@@ -88,27 +96,29 @@ private:
 	std::unique_ptr<DirectX::ResourceUploadBatch> mUploadBatch;
 
 	// Consant buffers
+	uint32_t mBoxCBHeapIndex = -1;
 	std::unique_ptr<UploadBuffer<ObjectConstants>> mObjectCB = nullptr;
+
+	uint32_t mPassCBHeapIndex = -1;
 	std::unique_ptr<UploadBuffer<PassConstants>> mPassCB = nullptr;
 
 	XMFLOAT4X4 mWorld = MathHelper::Identity4x4();
 	XMFLOAT4X4 mView = MathHelper::Identity4x4();
 	XMFLOAT4X4 mProj = MathHelper::Identity4x4();
 
-	void LoadPipeline();
-	void LoadAssets();
-	void PopulateCommandList();
-	void WaitForPreviousFrame();
+	void InitD3D();
 
+	void WaitForPreviousFrame();
 	void FlushCommandQueue();
 
 	void CreateCommandObjects();
 	void CreateSwapChain(IDXGIFactory6* factory);
 	void CreateDescriptorHeaps();
 	void CreateDepthStencilBuffer();
-	void CreateFrameResouces();
+	void CreateRTVsForSwapChain();
 	void CreateRootSignature();
 	void CreatePSO();
 	void CreateVertexAndIndexBuffers();
+	void CreateConstantBuffers();
 };
 

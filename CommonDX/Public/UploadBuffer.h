@@ -55,7 +55,7 @@ public:
 
 	void CopyData(const int elementIndex, const T& data)
 	{
-		assert(elementIndex < mElementCount);
+		assert(static_cast<UINT>(elementIndex) < mElementCount);
 
 		memcpy(&mMappedData[elementIndex * mElementByteSize], &data, sizeof(T));
 	}

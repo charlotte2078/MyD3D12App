@@ -1,9 +1,13 @@
 #include "MyD3D12App.h"
 
+#include <CommonDX/Public/CbvSrvUavHeap.h>
 #include <CommonDX/Public/Win32Application.h>
-#include <DirectXColors.h>
+
 #include <array>
 #include <BufferHelpers.h>
+#include <DirectXColors.h>
+
+constexpr UINT CBV_SRV_UAV_HEAP_CAPACITY = 16384;
 
 MyD3D12App::MyD3D12App(UINT width, UINT height, std::wstring name) :
 	DXSample(width, height, name),
@@ -20,15 +24,36 @@ MyD3D12App::~MyD3D12App()
 
 void MyD3D12App::OnInit()
 {
-	LoadPipeline();
-
+	InitD3D();
+	
 	mUploadBatch = std::make_unique<DirectX::ResourceUploadBatch>(mDevice.Get());
 
-	LoadAssets();
+	mUploadBatch->Begin();
+
+	CreateVertexAndIndexBuffers();
+
+	std::future<void> result = mUploadBatch->End(mCommandQueue.Get());
+
+	CreateRTVsForSwapChain();
+	CreateDepthStencilBuffer();
+	
+	CreateConstantBuffers();
+	CreateRootSignature();
+	CreatePSO();
+
+	// Close the command list (the command list is created in the recording state
+	ThrowIfFailed(mCommandList->Close());
+
+	// Create synchronisation objects and wait until assets have been uploaded to the GPU
+	{
+		ThrowIfFailed(mDevice->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&mFence)));
+		mFenceValue = 1;
+	}
+
+	result.wait();
 }
 
-// Load the rendering pipeline dependencies
-void MyD3D12App::LoadPipeline()
+void MyD3D12App::InitD3D()
 {
 	UINT dxgiFactoryFlags = 0;
 
@@ -74,41 +99,12 @@ void MyD3D12App::LoadPipeline()
 			IID_PPV_ARGS(&mDevice))); // COM ID of the Device to create and the pDevice
 	}
 
-	CreateCommandObjects();
-
-	CreateSwapChain(factory.Get());
-	
 	// This prevents the window from responding to alt-enter (which makes the window fullscreen)
 	ThrowIfFailed(factory->MakeWindowAssociation(Win32Application::GetHwnd(), DXGI_MWA_NO_ALT_ENTER));
 
-	// Create an rtv descriptor heap then use that to create an RTV for each frame
+	CreateCommandObjects();
+	CreateSwapChain(factory.Get());
 	CreateDescriptorHeaps();
-	CreateFrameResouces();
-
-	CreateDepthStencilBuffer();
-}
-
-void MyD3D12App::LoadAssets()
-{
-	CreateRootSignature();
-	CreatePSO();
-		
-	// Bind the PSO to the command list
-	mCommandList->SetPipelineState(mPipelineState.Get());
-
-	// Close the command list (the command list is created in the recording state
-	ThrowIfFailed(mCommandList->Close());
-
-	CreateVertexAndIndexBuffers();
-
-	// Create synchronisation objects and wait until assets have been uploaded to the GPU
-	{
-		ThrowIfFailed(mDevice->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&mFence)));
-		mFenceValue = 1;
-
-		// Wait for command list to execute
-		WaitForPreviousFrame();
-	}
 }
 
 // Update frame based values
@@ -120,7 +116,7 @@ void MyD3D12App::OnUpdate(const float deltaTime)
 	}
 
 	// Update the world, view, and projection matrices
-	XMVECTOR pos = XMVectorSet(0.0f, 0.0f, -10.0f, 1.0f); // TODO: add a moveable camera
+	XMVECTOR pos = XMVectorSet(0.0f, 0.0f, -5.0f, 1.0f); // TODO: add a moveable camera
 	XMVECTOR target = XMVectorZero();
 	XMVECTOR up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
 	XMMATRIX view = XMMatrixLookAtLH(pos, target, up);
@@ -149,8 +145,43 @@ void MyD3D12App::OnRender()
 		return;
 	}
 
-	// Record all the commands we need to render teh scene into the command list
-	PopulateCommandList();
+	ThrowIfFailed(mCommandAllocator->Reset());
+	ThrowIfFailed(mCommandList->Reset(mCommandAllocator.Get(), mPipelineState.Get()));
+
+	CbvSrvUavHeap& cbvSrvUavHeap = CbvSrvUavHeap::Get();
+	ID3D12DescriptorHeap* descriptorHeaps[] = { cbvSrvUavHeap.GetD3dHeap() };
+	mCommandList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
+	
+	mCommandList->RSSetViewports(1, &mViewport);
+	mCommandList->RSSetScissorRects(1, &mScissorRect);
+
+	CD3DX12_RESOURCE_BARRIER rbTransitionPresentRT = CD3DX12_RESOURCE_BARRIER::Transition(mRenderTargets[mFrameIndex].Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
+	mCommandList->ResourceBarrier(1, &rbTransitionPresentRT);
+
+	auto rtvHandle = mRtvHeap.CpuHandle(mFrameIndex);
+	auto dsvHandle = mDsvHeap.CpuHandle(0);
+	const float clearColour[] = { 0.0f, 0.2f, 0.4f, 1.0f };
+	mCommandList->ClearRenderTargetView(rtvHandle, clearColour, 0, nullptr);
+	mCommandList->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, nullptr);
+
+	mCommandList->OMSetRenderTargets(1, &rtvHandle, FALSE, &dsvHandle);
+
+	mCommandList->SetPipelineState(mPipelineState.Get());
+	mCommandList->SetGraphicsRootSignature(mRootSignature.Get());
+
+	mCommandList->SetGraphicsRootDescriptorTable(ROOT_ARG_OBJECT_CBV, cbvSrvUavHeap.GpuHandle(mBoxCBHeapIndex));
+	mCommandList->SetGraphicsRootDescriptorTable(ROOT_ARG_OBJECT_CBV, cbvSrvUavHeap.GpuHandle(mPassCBHeapIndex));
+
+	mCommandList->IASetVertexBuffers(0, 1, &mVertexBufferView);
+	mCommandList->IASetIndexBuffer(&mIndexBufferView);
+	mCommandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	
+	mCommandList->DrawIndexedInstanced(36, 1, 0, 0, 0);
+
+	CD3DX12_RESOURCE_BARRIER rbTransitionRTPresent = CD3DX12_RESOURCE_BARRIER::Transition(mRenderTargets[mFrameIndex].Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
+	mCommandList->ResourceBarrier(1, &rbTransitionRTPresent);
+
+	ThrowIfFailed(mCommandList->Close());
 
 	// Execute the command list
 	ID3D12CommandList* ppCommandLists[] = { mCommandList.Get() };
@@ -188,15 +219,8 @@ void MyD3D12App::OnResize()
 
 	mFrameIndex = 0;
 
-	for (UINT i = 0; i < gFrameCount; ++i)
-	{
-		ThrowIfFailed(mSwapChain->GetBuffer(i, IID_PPV_ARGS(&mRenderTargets[i])));
-
-		mDevice->CreateRenderTargetView(
-			mRenderTargets[i].Get(),
-			nullptr,
-			mRtvHeap.CpuHandle(i));
-	}
+	CreateRTVsForSwapChain();
+	CreateDepthStencilBuffer();
 
 	// Execute the resize commands.
 	ThrowIfFailed(mCommandList->Close());
@@ -221,38 +245,6 @@ void MyD3D12App::OnResize()
 void MyD3D12App::OnDestroy()
 {
 	WaitForPreviousFrame();
-}
-
-void MyD3D12App::PopulateCommandList()
-{
-	ThrowIfFailed(mCommandAllocator->Reset());
-
-	ThrowIfFailed(mCommandList->Reset(mCommandAllocator.Get(), mPipelineState.Get()));
-
-	mCommandList->SetGraphicsRootSignature(mRootSignature.Get());
-	mCommandList->RSSetViewports(1, &mViewport);
-	mCommandList->RSSetScissorRects(1, &mScissorRect);
-
-	CD3DX12_RESOURCE_BARRIER rbTransitionPresentRT = CD3DX12_RESOURCE_BARRIER::Transition(mRenderTargets[mFrameIndex].Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
-	mCommandList->ResourceBarrier(1, &rbTransitionPresentRT);
-
-	auto rtvHandle = mRtvHeap.CpuHandle(mFrameIndex);
-	auto dsvHandle = mDsvHeap.CpuHandle(0);
-	mCommandList->OMSetRenderTargets(1, &rtvHandle, FALSE, &dsvHandle);
-
-	const float clearColour[] = { 0.0f, 0.2f, 0.4f, 1.0f };
-	mCommandList->ClearRenderTargetView(rtvHandle, clearColour, 0, nullptr);
-	mCommandList->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, nullptr);
-
-	mCommandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	mCommandList->IASetVertexBuffers(0, 1, &mVertexBufferView);
-	mCommandList->IASetIndexBuffer(&mIndexBufferView);
-	mCommandList->DrawIndexedInstanced(36, 1, 0, 0, 0);
-
-	CD3DX12_RESOURCE_BARRIER rbTransitionRTPresent = CD3DX12_RESOURCE_BARRIER::Transition(mRenderTargets[mFrameIndex].Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
-	mCommandList->ResourceBarrier(1, &rbTransitionRTPresent);
-
-	ThrowIfFailed(mCommandList->Close());
 }
 
 void MyD3D12App::WaitForPreviousFrame()
@@ -385,9 +377,7 @@ void MyD3D12App::CreateDepthStencilBuffer()
 	mCommandList->ResourceBarrier(1, &rbDepthCommonDepthWrite);
 }
 
-// Create resources needed for each frame.
-// Here need an RTV and a depth stencil buffer
-void MyD3D12App::CreateFrameResouces()
+void MyD3D12App::CreateRTVsForSwapChain()
 {
 	// Create an RTV for each frame
 	for (UINT i = 0; i < gFrameCount; ++i)
@@ -395,18 +385,42 @@ void MyD3D12App::CreateFrameResouces()
 		ThrowIfFailed(mSwapChain->GetBuffer(i, IID_PPV_ARGS(&mRenderTargets[i])));
 		mDevice->CreateRenderTargetView(mRenderTargets[i].Get(), nullptr, mRtvHeap.CpuHandle(i));
 	}
-
-	
 }
 
-// Create an empty root signature
+// Create root signature
 // A root signature defines what types of resources are bound to the graphics pipeline
 void MyD3D12App::CreateRootSignature()
 {
+	CD3DX12_ROOT_PARAMETER slotRootParameter[ROOT_ARG_COUNT] = {};
+
+	// Table for per-object constants
+	{
+		CD3DX12_DESCRIPTOR_RANGE objectCbvTable;
+	
+		constexpr UINT numDescriptors = 1;
+		constexpr UINT baseRegister = 0;
+
+		objectCbvTable.Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, numDescriptors, baseRegister);
+
+		slotRootParameter[ROOT_ARG_OBJECT_CBV].InitAsDescriptorTable(1, &objectCbvTable);
+	}
+
+	// Table for per-pass constants
+	{
+		CD3DX12_DESCRIPTOR_RANGE passCbvTable;
+
+		constexpr UINT numDescriptors = 1;
+		constexpr UINT baseRegister = 1;
+
+		passCbvTable.Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, numDescriptors, baseRegister);
+
+		slotRootParameter[ROOT_ARG_PASS_CBV].InitAsDescriptorTable(1, &passCbvTable);
+	}
+	
 	CD3DX12_ROOT_SIGNATURE_DESC rootSignatureDesc;
 	rootSignatureDesc.Init(
-		0, // Num parameters
-		nullptr, // Ptr to root parameter
+		ROOT_ARG_COUNT, // Num parameters
+		slotRootParameter, // Ptr to root parameter
 		0, // Num static samplers
 		nullptr, // Pointer to static samplers desc
 		D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT); // Flags - this one opts the app into using the input assembler
@@ -420,9 +434,6 @@ void MyD3D12App::CreateRootSignature()
 // Create the pipeline state (compile and load shaders)
 void MyD3D12App::CreatePSO()
 {
-	//ComPtr<ID3DBlob> vertexShader;
-	//ComPtr<ID3DBlob> pixelShader;
-
 #if defined(DEBUG) || defined(_DEBUG)  
 #define COMMA_DEBUG_ARGS ,DXC_ARG_DEBUG, DXC_ARG_SKIP_OPTIMIZATIONS
 #else
@@ -435,8 +446,7 @@ void MyD3D12App::CreatePSO()
 
 	std::vector<LPCWSTR> psArgs = { L"-E PSMain", L"-T ps_6_6" COMMA_DEBUG_ARGS};
 	ComPtr<IDxcBlob> pixelShader = DXHelpers::CompileShader(L"Shaders\\shaders.hlsl", psArgs);
-	//ThrowIfFailed(D3DCompileFromFile(L"shaders.hlsl", nullptr, nullptr, "PSMain", "ps_5_0", compileFlags, 0, &pixelShader, nullptr));
-
+	//ThrowIfFailed(D3DCompileFromFile(L"shaders.hlsl", nullptr, nullptr, "PSMain", "ps_5_0", compileFlags, 0, &pixelShader, nullptr));s
 	// Define the vertex input layout
 	D3D12_INPUT_ELEMENT_DESC inputElementDescs[] =
 	{
@@ -507,8 +517,6 @@ void MyD3D12App::CreateVertexAndIndexBuffers()
 		4, 3, 7
 	};
 
-	mUploadBatch->Begin(D3D12_COMMAND_LIST_TYPE_DIRECT);
-
 	CreateStaticBuffer(
 		mDevice.Get(),
 		*mUploadBatch,
@@ -527,15 +535,49 @@ void MyD3D12App::CreateVertexAndIndexBuffers()
 		D3D12_RESOURCE_STATE_INDEX_BUFFER,
 		&mIndexBufferGPU);
 
-	std::future<void> result = mUploadBatch->End(mCommandQueue.Get());
-
-	result.wait(); // TODO: move this to somewhere else so that we can do CPU work in the meantime
-
 	mVertexBufferView.BufferLocation = mVertexBufferGPU->GetGPUVirtualAddress();
-	mVertexBufferView.SizeInBytes = cubeVertices.size() * sizeof(Vertex);
+	mVertexBufferView.SizeInBytes = static_cast<UINT>(cubeVertices.size() * sizeof(Vertex));
 	mVertexBufferView.StrideInBytes = sizeof(Vertex);
 
 	mIndexBufferView.BufferLocation = mIndexBufferGPU->GetGPUVirtualAddress();
 	mIndexBufferView.Format = DXGI_FORMAT_R16_UINT;
-	mIndexBufferView.SizeInBytes = cubeIndices.size() * sizeof(std::uint16_t);
+	mIndexBufferView.SizeInBytes = static_cast<UINT>(cubeIndices.size() * sizeof(std::uint16_t));
+}
+
+void MyD3D12App::CreateConstantBuffers()
+{
+	CbvSrvUavHeap& cbvSrvUavHeap = CbvSrvUavHeap::Get();
+
+	if (!cbvSrvUavHeap.IsInitialised())
+	{
+		cbvSrvUavHeap.Init(mDevice.Get(), CBV_SRV_UAV_HEAP_CAPACITY);
+	}
+
+	// Object constant buffer and view
+	mBoxCBHeapIndex = cbvSrvUavHeap.NextFreeIndex();
+	
+	mObjectCB = std::make_unique<UploadBuffer<ObjectConstants>>(
+		mDevice.Get(),
+		1,
+		true);
+
+	D3D12_CONSTANT_BUFFER_VIEW_DESC objectCBV;
+	objectCBV.BufferLocation = mObjectCB->Resource()->GetGPUVirtualAddress();
+	objectCBV.SizeInBytes = mObjectCB->ElementByteSize();
+
+	mDevice->CreateConstantBufferView(&objectCBV, cbvSrvUavHeap.CpuHandle(mBoxCBHeapIndex));
+
+	// Pass constant buffer and view
+	mPassCBHeapIndex = cbvSrvUavHeap.NextFreeIndex();
+
+	mPassCB = std::make_unique<UploadBuffer<PassConstants>>(
+		mDevice.Get(),
+		1,
+		true);
+
+	D3D12_CONSTANT_BUFFER_VIEW_DESC passCBV;
+	passCBV.BufferLocation = mPassCB->Resource()->GetGPUVirtualAddress();
+	passCBV.SizeInBytes = mPassCB->ElementByteSize();
+
+	mDevice->CreateConstantBufferView(&passCBV, cbvSrvUavHeap.CpuHandle(mPassCBHeapIndex));
 }
