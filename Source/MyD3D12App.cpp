@@ -99,12 +99,12 @@ void MyD3D12App::InitD3D()
 			IID_PPV_ARGS(&mDevice))); // COM ID of the Device to create and the pDevice
 	}
 
-	// This prevents the window from responding to alt-enter (which makes the window fullscreen)
-	ThrowIfFailed(factory->MakeWindowAssociation(Win32Application::GetHwnd(), DXGI_MWA_NO_ALT_ENTER));
-
 	CreateCommandObjects();
 	CreateSwapChain(factory.Get());
 	CreateDescriptorHeaps();
+
+	// This prevents the window from responding to alt-enter (which makes the window fullscreen)
+	ThrowIfFailed(factory->MakeWindowAssociation(Win32Application::GetHwnd(), DXGI_MWA_NO_ALT_ENTER));
 }
 
 // Update frame based values
