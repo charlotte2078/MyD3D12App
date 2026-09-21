@@ -210,6 +210,8 @@ void MyD3D12App::OnResize()
 		mRenderTargets[i].Reset();
 	}
 
+	mDepthStencilBuffer.Reset();
+
 	// Resize the swap chain.
 	ThrowIfFailed(mSwapChain->ResizeBuffers(
 		gFrameCount,
