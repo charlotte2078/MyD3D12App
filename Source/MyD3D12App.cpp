@@ -4,6 +4,7 @@
 #include <CommonDX/Public/Win32Application.h>
 
 #include <array>
+#include <sstream>
 #include <BufferHelpers.h>
 #include <DirectXColors.h>
 
@@ -47,6 +48,8 @@ void MyD3D12App::OnInit()
 	// Create synchronisation objects and wait until assets have been uploaded to the GPU
 	{
 		ThrowIfFailed(mDevice->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&mFence)));
+		DXHelpers::SetName(mFence.Get(), L"Fence");
+
 		mFenceValue = 1;
 	}
 
@@ -291,10 +294,13 @@ void MyD3D12App::CreateCommandObjects()
 	queueDesc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT; // A command buffer that the GPU can execute
 
 	ThrowIfFailed(mDevice->CreateCommandQueue(&queueDesc, IID_PPV_ARGS(&mCommandQueue)));
+	DXHelpers::SetName(mCommandQueue.Get(), L"Command Queue");
 
 	ThrowIfFailed(mDevice->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&mCommandAllocator)));
+	DXHelpers::SetName(mCommandAllocator.Get(), L"Command Allocator");
 
 	ThrowIfFailed(mDevice->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, mCommandAllocator.Get(), nullptr, IID_PPV_ARGS(&mCommandList)));
+	DXHelpers::SetName(mCommandList.Get(), L"Command List");
 }
 
 void MyD3D12App::CreateSwapChain(IDXGIFactory6* factory)
@@ -363,6 +369,8 @@ void MyD3D12App::CreateDepthStencilBuffer()
 			&optimisedClearValue,
 			IID_PPV_ARGS(mDepthStencilBuffer.GetAddressOf())
 		));
+		
+		DXHelpers::SetName(mDepthStencilBuffer.Get(), L"Depth Stencil Buffer");
 	}
 
 	mDevice->CreateDepthStencilView(
@@ -386,6 +394,19 @@ void MyD3D12App::CreateRTVsForSwapChain()
 	{
 		ThrowIfFailed(mSwapChain->GetBuffer(i, IID_PPV_ARGS(&mRenderTargets[i])));
 		mDevice->CreateRenderTargetView(mRenderTargets[i].Get(), nullptr, mRtvHeap.CpuHandle(i));
+
+#if defined(DEBUG) || defined(_DEBUG)
+		// UINT to LPCWSTR conversion https://stackoverflow.com/a/8626503
+		std::wstringstream wss;
+		std::wstring wstr;
+
+		wss << L"Render target ";
+		wss << i;
+
+		wss >> wstr;
+
+		DXHelpers::SetName(mRenderTargets[i].Get(), wstr.c_str());
+#endif
 	}
 }
 
