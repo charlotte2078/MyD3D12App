@@ -1,9 +1,10 @@
+#include "TriangleApp.h"
+
 #include "CommonDX/Public/Includes.h"
-#include "MyD3D12App.h"
 
 using DXHelpers::ThrowIfFailed;
 
-MyD3D12App::MyD3D12App(UINT width, UINT height, std::wstring name) :
+TriangleApp::TriangleApp(UINT width, UINT height, std::wstring name) :
 	DXSample(width, height, name),
 	mFrameIndex(0),
 	mViewport(0.0f, 0.0f, static_cast<float>(width), static_cast<float>(height)),
@@ -12,18 +13,18 @@ MyD3D12App::MyD3D12App(UINT width, UINT height, std::wstring name) :
 {
 }
 
-MyD3D12App::~MyD3D12App()
+TriangleApp::~TriangleApp()
 {
 }
 
-void MyD3D12App::OnInit()
+void TriangleApp::OnInit()
 {
 	LoadPipeline();
 	LoadAssets();
 }
 
 // Load the rendering pipeline dependencies
-void MyD3D12App::LoadPipeline()
+void TriangleApp::LoadPipeline()
 {
 	UINT dxgiFactoryFlags = 0;
 
@@ -110,7 +111,7 @@ void MyD3D12App::LoadPipeline()
 	ThrowIfFailed(mDevice->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&mCommandAllocator)));
 }
 
-void MyD3D12App::LoadAssets()
+void TriangleApp::LoadAssets()
 {
 	CreateRootSignature();
 	CreatePSO();
@@ -141,13 +142,13 @@ void MyD3D12App::LoadAssets()
 }
 
 // Update frame based values
-void MyD3D12App::OnUpdate(const float deltaTime)
+void TriangleApp::OnUpdate(const float deltaTime)
 {
 
 }
 
 // Render the scene
-void MyD3D12App::OnRender()
+void TriangleApp::OnRender()
 {
 	// Record all the commands we need to render teh scene into the command list
 	PopulateCommandList();
@@ -162,14 +163,14 @@ void MyD3D12App::OnRender()
 	WaitForPreviousFrame();
 }
 
-void MyD3D12App::OnDestroy()
+void TriangleApp::OnDestroy()
 {
 	WaitForPreviousFrame();
 
 	CloseHandle(mFenceEvent);
 }
 
-void MyD3D12App::PopulateCommandList()
+void TriangleApp::PopulateCommandList()
 {
 	ThrowIfFailed(mCommandAllocator->Reset());
 
@@ -197,7 +198,7 @@ void MyD3D12App::PopulateCommandList()
 	ThrowIfFailed(mCommandList->Close());
 }
 
-void MyD3D12App::WaitForPreviousFrame()
+void TriangleApp::WaitForPreviousFrame()
 {
 	// WAITING FOR THE FRAME TO COMPLETE BEFORE CONTINUING IS NOT BEST PRACTICE.
 	// This is code implemented as such for simplicity. The D3D12HelloFrameBuffering
@@ -220,7 +221,7 @@ void MyD3D12App::WaitForPreviousFrame()
 }
 
 // Create desctiptor heaps
-void MyD3D12App::CreateDescriptorHeaps()
+void TriangleApp::CreateDescriptorHeaps()
 {
 	// Describe and create an RTV (render target view) descriptor heap
 	D3D12_DESCRIPTOR_HEAP_DESC rtvHeapDesc = {};
@@ -234,7 +235,7 @@ void MyD3D12App::CreateDescriptorHeaps()
 
 // Create resources needed for each frame.
 // Here need an RTV.
-void MyD3D12App::CreateFrameResouces()
+void TriangleApp::CreateFrameResouces()
 {
 	CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(mRtvHeap->GetCPUDescriptorHandleForHeapStart());
 
@@ -249,7 +250,7 @@ void MyD3D12App::CreateFrameResouces()
 
 // Create an empty root signature
 // A root signature defines what types of resources are bound to the graphics pipeline
-void MyD3D12App::CreateRootSignature()
+void TriangleApp::CreateRootSignature()
 {
 	CD3DX12_ROOT_SIGNATURE_DESC rootSignatureDesc;
 	rootSignatureDesc.Init(
@@ -266,7 +267,7 @@ void MyD3D12App::CreateRootSignature()
 }
 
 // Create the pipeline state (compile and load shaders)
-void MyD3D12App::CreatePSO()
+void TriangleApp::CreatePSO()
 {
 	//ComPtr<ID3DBlob> vertexShader;
 	//ComPtr<ID3DBlob> pixelShader;
@@ -312,7 +313,7 @@ void MyD3D12App::CreatePSO()
 }
 
 // Create the vertex buffer (also define geometry)
-void MyD3D12App::CreateVertexBuffer()
+void TriangleApp::CreateVertexBuffer()
 {
 	// Define our geometry
 	Vertex triangleVertices[] =

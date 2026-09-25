@@ -2,7 +2,7 @@
 // Based on code by Frank Luna - 3D Game Programming with DirectX12 - Appendix A (pp 758-761)
 
 #include "CommonDX/Public/Includes.h"
-#include "MyD3D12App.h"
+#include "Source/Triangle/TriangleApp.h"
 
 // Equivalent of main()
 // 
@@ -17,7 +17,7 @@
 _Use_decl_annotations_
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pCmdLine, int nShowCmd)
 {
-	MyD3D12App triangleSample(1280, 720, L"My First Triangle");
+	TriangleApp triangleSample(1280, 720, L"My First Triangle");
 
 	return Win32Application::Run(&triangleSample, hInstance, nShowCmd);
 }

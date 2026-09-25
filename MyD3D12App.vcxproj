@@ -148,19 +148,19 @@
   <ItemGroup>
     <ClInclude Include="CommonDX\Public\DXSampleHelper.h" />
     <ClInclude Include="CommonDX\Public\DXSample.h" />
+    <ClInclude Include="Source\Triangle\TriangleApp.h" />
     <ClInclude Include="Utility\Public\Input.h" />
     <ClInclude Include="Utility\Public\MathHelper.h" />
-    <ClInclude Include="Source\MyD3D12App.h" />
     <ClInclude Include="CommonDX\Public\Includes.h" />
     <ClInclude Include="Utility\Public\Timer.h" />
     <ClInclude Include="CommonDX\Public\Win32Application.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="CommonDX\Private\DXSample.cpp" />
+    <ClCompile Include="Source\Triangle\TriangleApp.cpp" />
     <ClCompile Include="Utility\Private\Input.cpp" />
     <ClCompile Include="Source\Main.cpp" />
     <ClCompile Include="Utility\Private\MathHelper.cpp" />
-    <ClCompile Include="Source\MyD3D12App.cpp" />
     <ClCompile Include="Utility\Private\Timer.cpp" />
     <ClCompile Include="CommonDX\Private\Win32Application.cpp" />
   </ItemGroup>

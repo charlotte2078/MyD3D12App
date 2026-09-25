@@ -9,18 +9,18 @@
 using namespace DirectX;
 using Microsoft::WRL::ComPtr;
 
-class MyD3D12App : public DXSample
+class TriangleApp : public DXSample
 {
 public:
 	// Constructor
-	MyD3D12App(UINT width, UINT height, std::wstring name);
+	TriangleApp(UINT width, UINT height, std::wstring name);
 
 	// Prohibit copying
-	MyD3D12App(const MyD3D12App& rhs) = delete;
-	MyD3D12App& operator=(const MyD3D12App& rhs) = delete;
+	TriangleApp(const TriangleApp& rhs) = delete;
+	TriangleApp& operator=(const TriangleApp& rhs) = delete;
 	
 	// Destructor
-	~MyD3D12App();
+	~TriangleApp();
 
 	virtual void OnInit() override;
 	virtual void OnUpdate(const float deltaTime) override;
