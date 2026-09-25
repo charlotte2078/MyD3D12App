@@ -169,6 +169,10 @@ void TriangleApp::OnDestroy()
 	CloseHandle(mFenceEvent);
 }
 
+void TriangleApp::OnResize()
+{
+}
+
 void TriangleApp::PopulateCommandList()
 {
 	ThrowIfFailed(mCommandAllocator->Reset());

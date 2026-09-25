@@ -26,6 +26,7 @@ public:
 	virtual void OnUpdate(const float deltaTime) override;
 	virtual void OnRender() override;
 	virtual void OnDestroy() override;
+	virtual void OnResize() override;
 
 private:
 	// The number of buffers in the swap chain
