@@ -3,6 +3,7 @@
 
 #include "Source/Cube/CubeApp.h"
 #include <CommonDX/Public/Win32Application.h>
+#include "Source/Triangle/TriangleApp.h"
 
 // Equivalent of main()
 // 

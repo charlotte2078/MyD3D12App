@@ -155,6 +155,7 @@
     <ClInclude Include="Utility\Public\Input.h" />
     <ClInclude Include="Utility\Public\MathHelper.h" />
     <ClInclude Include="Source\Cube\CubeApp.h" />
+    <ClInclude Include="Source\Triangle\TriangleApp.h" />
     <ClInclude Include="CommonDX\Public\Includes.h" />
     <ClInclude Include="Utility\Public\Timer.h" />
     <ClInclude Include="CommonDX\Public\Win32Application.h" />
@@ -163,6 +164,7 @@
     <ClCompile Include="CommonDX\Private\CbvSrvUavHeap.cpp" />
     <ClCompile Include="CommonDX\Private\DescriptorHeap.cpp" />
     <ClCompile Include="CommonDX\Private\DXSample.cpp" />
+    <ClCompile Include="Source\Triangle\TriangleApp.cpp" />
     <ClCompile Include="Utility\Private\Input.cpp" />
     <ClCompile Include="Source\Main.cpp" />
     <ClCompile Include="Utility\Private\MathHelper.cpp" />
@@ -173,6 +175,7 @@
   <ItemGroup>
     <None Include="packages.config" />
     <CustomBuild Include="Shaders\cube_shaders.hlsl">
+    <CustomBuild Include="Shaders\triangle_shaders.hlsl">
       <FileType>Document</FileType>
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</DeploymentContent>
       <TreatOutputAsContent Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</TreatOutputAsContent>
