@@ -120,7 +120,17 @@ void MyD3D12App::OnUpdate(const float deltaTime)
 	XMMATRIX view = XMMatrixLookAtLH(pos, target, up);
 	XMStoreFloat4x4(&mView, view);
 
+	// Make the cube rotate over time
+	static float pitch, yaw, roll = 0.0f;
+	constexpr float smallNumber = 0.001f;
+	pitch += smallNumber * deltaTime;
+	yaw += smallNumber * deltaTime * 2;
+	roll += smallNumber * deltaTime * 3;
+
 	XMMATRIX world = XMLoadFloat4x4(&mWorld);
+	XMMATRIX rotation = XMMatrixRotationRollPitchYaw(pitch, yaw, roll);
+	world = world * rotation;
+
 	XMMATRIX proj = XMLoadFloat4x4(&mProj);
 	XMMATRIX viewProj = view * proj;
 
