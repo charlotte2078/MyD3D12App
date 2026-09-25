@@ -4,6 +4,7 @@
 #include <CommonDX/Public/Win32Application.h>
 
 #include <array>
+#include <sstream>
 #include <BufferHelpers.h>
 #include <DirectXColors.h>
 
@@ -28,27 +29,17 @@ void MyD3D12App::OnInit()
 	
 	mUploadBatch = std::make_unique<DirectX::ResourceUploadBatch>(mDevice.Get());
 
+	OnResize();
+
 	mUploadBatch->Begin();
 
 	CreateVertexAndIndexBuffers();
 
 	std::future<void> result = mUploadBatch->End(mCommandQueue.Get());
-
-	CreateRTVsForSwapChain();
-	CreateDepthStencilBuffer();
 	
 	CreateConstantBuffers();
 	CreateRootSignature();
 	CreatePSO();
-
-	// Close the command list (the command list is created in the recording state
-	ThrowIfFailed(mCommandList->Close());
-
-	// Create synchronisation objects and wait until assets have been uploaded to the GPU
-	{
-		ThrowIfFailed(mDevice->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&mFence)));
-		mFenceValue = 1;
-	}
 
 	result.wait();
 }
@@ -99,12 +90,19 @@ void MyD3D12App::InitD3D()
 			IID_PPV_ARGS(&mDevice))); // COM ID of the Device to create and the pDevice
 	}
 
-	// This prevents the window from responding to alt-enter (which makes the window fullscreen)
-	ThrowIfFailed(factory->MakeWindowAssociation(Win32Application::GetHwnd(), DXGI_MWA_NO_ALT_ENTER));
-
 	CreateCommandObjects();
 	CreateSwapChain(factory.Get());
 	CreateDescriptorHeaps();
+
+	{
+		ThrowIfFailed(mDevice->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&mFence)));
+		DXHelpers::SetName(mFence.Get(), L"Fence");
+
+		mFenceValue = 1;
+	}
+
+	// This prevents the window from responding to alt-enter (which makes the window fullscreen)
+	ThrowIfFailed(factory->MakeWindowAssociation(Win32Application::GetHwnd(), DXGI_MWA_NO_ALT_ENTER));
 }
 
 // Update frame based values
@@ -170,7 +168,7 @@ void MyD3D12App::OnRender()
 	mCommandList->SetGraphicsRootSignature(mRootSignature.Get());
 
 	mCommandList->SetGraphicsRootDescriptorTable(ROOT_ARG_OBJECT_CBV, cbvSrvUavHeap.GpuHandle(mBoxCBHeapIndex));
-	mCommandList->SetGraphicsRootDescriptorTable(ROOT_ARG_OBJECT_CBV, cbvSrvUavHeap.GpuHandle(mPassCBHeapIndex));
+	mCommandList->SetGraphicsRootDescriptorTable(ROOT_ARG_PASS_CBV, cbvSrvUavHeap.GpuHandle(mPassCBHeapIndex));
 
 	mCommandList->IASetVertexBuffers(0, 1, &mVertexBufferView);
 	mCommandList->IASetIndexBuffer(&mIndexBufferView);
@@ -210,6 +208,8 @@ void MyD3D12App::OnResize()
 		mRenderTargets[i].Reset();
 	}
 
+	mDepthStencilBuffer.Reset();
+
 	// Resize the swap chain.
 	ThrowIfFailed(mSwapChain->ResizeBuffers(
 		gFrameCount,
@@ -240,6 +240,10 @@ void MyD3D12App::OnResize()
 	mScissorRect.top = 0;
 	mScissorRect.right = mWidth;
 	mScissorRect.bottom = mHeight;
+
+	// The window resized, so update the aspect ratio and recompute the projection matrix.
+	XMMATRIX P = XMMatrixPerspectiveFovLH(0.25f * MathHelper::Pi, static_cast<float>(mWidth)/mHeight, 1.0f, 1000.0f);
+	XMStoreFloat4x4(&mProj, P);
 }
 
 void MyD3D12App::OnDestroy()
@@ -289,10 +293,15 @@ void MyD3D12App::CreateCommandObjects()
 	queueDesc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT; // A command buffer that the GPU can execute
 
 	ThrowIfFailed(mDevice->CreateCommandQueue(&queueDesc, IID_PPV_ARGS(&mCommandQueue)));
+	DXHelpers::SetName(mCommandQueue.Get(), L"Command Queue");
 
 	ThrowIfFailed(mDevice->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&mCommandAllocator)));
+	DXHelpers::SetName(mCommandAllocator.Get(), L"Command Allocator");
 
 	ThrowIfFailed(mDevice->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, mCommandAllocator.Get(), nullptr, IID_PPV_ARGS(&mCommandList)));
+	DXHelpers::SetName(mCommandList.Get(), L"Command List");
+
+	ThrowIfFailed(mCommandList->Close());
 }
 
 void MyD3D12App::CreateSwapChain(IDXGIFactory6* factory)
@@ -361,6 +370,8 @@ void MyD3D12App::CreateDepthStencilBuffer()
 			&optimisedClearValue,
 			IID_PPV_ARGS(mDepthStencilBuffer.GetAddressOf())
 		));
+		
+		DXHelpers::SetName(mDepthStencilBuffer.Get(), L"Depth Stencil Buffer");
 	}
 
 	mDevice->CreateDepthStencilView(
@@ -384,6 +395,19 @@ void MyD3D12App::CreateRTVsForSwapChain()
 	{
 		ThrowIfFailed(mSwapChain->GetBuffer(i, IID_PPV_ARGS(&mRenderTargets[i])));
 		mDevice->CreateRenderTargetView(mRenderTargets[i].Get(), nullptr, mRtvHeap.CpuHandle(i));
+
+#if defined(DEBUG) || defined(_DEBUG)
+		// UINT to LPCWSTR conversion https://stackoverflow.com/a/8626503
+		std::wstringstream wss;
+		std::wstring wstr;
+
+		wss << L"Render target ";
+		wss << i;
+
+		wss >> wstr;
+
+		DXHelpers::SetName(mRenderTargets[i].Get(), wstr.c_str());
+#endif
 	}
 }
 
@@ -462,13 +486,14 @@ void MyD3D12App::CreatePSO()
 	psoDesc.PS = DXHelpers::ByteCodeFromBlob(pixelShader.Get());
 	psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
 	psoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
-	psoDesc.DepthStencilState.DepthEnable = FALSE;
-	psoDesc.DepthStencilState.StencilEnable = FALSE;
+	psoDesc.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
 	psoDesc.SampleMask = UINT_MAX;
 	psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
 	psoDesc.NumRenderTargets = 1;
-	psoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
+	psoDesc.RTVFormats[0] = mkSwapChainFormat;
+	psoDesc.DSVFormat = mkDepthStencilFormat;
 	psoDesc.SampleDesc.Count = 1;
+	psoDesc.SampleDesc.Quality = 0;
 
 	ThrowIfFailed(mDevice->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&mPipelineState)));
 }

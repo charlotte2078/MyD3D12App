@@ -16,7 +16,7 @@ ConstantBuffer<PassConstants> gPassConstants : register(b1);
 
 struct VSInput
 { 
-    float4 position : POSITION;
+    float3 position : POSITION;
     float4 color : COLOR;
 };
 
@@ -31,7 +31,7 @@ PSInput VSMain(VSInput input)
 {
     PSInput result;
     
-    float4 worldPos = mul(input.position, gObjConstants.gWorld);
+    float4 worldPos = mul(float4(input.position, 1.0f), gObjConstants.gWorld);
     result.position = mul(worldPos, gPassConstants.gViewProj);
     
     result.color = input.color;
