@@ -245,6 +245,10 @@ void MyD3D12App::OnResize()
 	mScissorRect.top = 0;
 	mScissorRect.right = mWidth;
 	mScissorRect.bottom = mHeight;
+
+	// The window resized, so update the aspect ratio and recompute the projection matrix.
+	XMMATRIX P = XMMatrixPerspectiveFovLH(0.25f * MathHelper::Pi, static_cast<float>(mWidth)/mHeight, 1.0f, 1000.0f);
+	XMStoreFloat4x4(&mProj, P);
 }
 
 void MyD3D12App::OnDestroy()
