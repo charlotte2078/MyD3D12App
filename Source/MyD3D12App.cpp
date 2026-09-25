@@ -29,29 +29,17 @@ void MyD3D12App::OnInit()
 	
 	mUploadBatch = std::make_unique<DirectX::ResourceUploadBatch>(mDevice.Get());
 
+	OnResize();
+
 	mUploadBatch->Begin();
 
 	CreateVertexAndIndexBuffers();
 
 	std::future<void> result = mUploadBatch->End(mCommandQueue.Get());
-
-	CreateRTVsForSwapChain();
-	CreateDepthStencilBuffer();
 	
 	CreateConstantBuffers();
 	CreateRootSignature();
 	CreatePSO();
-
-	// Close the command list (the command list is created in the recording state
-	ThrowIfFailed(mCommandList->Close());
-
-	// Create synchronisation objects and wait until assets have been uploaded to the GPU
-	{
-		ThrowIfFailed(mDevice->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&mFence)));
-		DXHelpers::SetName(mFence.Get(), L"Fence");
-
-		mFenceValue = 1;
-	}
 
 	result.wait();
 }
@@ -105,6 +93,13 @@ void MyD3D12App::InitD3D()
 	CreateCommandObjects();
 	CreateSwapChain(factory.Get());
 	CreateDescriptorHeaps();
+
+	{
+		ThrowIfFailed(mDevice->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&mFence)));
+		DXHelpers::SetName(mFence.Get(), L"Fence");
+
+		mFenceValue = 1;
+	}
 
 	// This prevents the window from responding to alt-enter (which makes the window fullscreen)
 	ThrowIfFailed(factory->MakeWindowAssociation(Win32Application::GetHwnd(), DXGI_MWA_NO_ALT_ENTER));
@@ -305,6 +300,8 @@ void MyD3D12App::CreateCommandObjects()
 
 	ThrowIfFailed(mDevice->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, mCommandAllocator.Get(), nullptr, IID_PPV_ARGS(&mCommandList)));
 	DXHelpers::SetName(mCommandList.Get(), L"Command List");
+
+	ThrowIfFailed(mCommandList->Close());
 }
 
 void MyD3D12App::CreateSwapChain(IDXGIFactory6* factory)
