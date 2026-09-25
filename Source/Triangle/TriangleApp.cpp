@@ -279,11 +279,11 @@ void TriangleApp::CreatePSO()
 #endif
 
 	std::vector<LPCWSTR> vsArgs = { L"-E VSMain", L"-T vs_6_6" COMMA_DEBUG_ARGS};
-	ComPtr<IDxcBlob> vertexShader = DXHelpers::CompileShader(L"Shaders\\shaders.hlsl", vsArgs);
+	ComPtr<IDxcBlob> vertexShader = DXHelpers::CompileShader(L"Shaders\\triangle_shaders.hlsl", vsArgs);
 	//ThrowIfFailed(D3DCompileFromFile(L"shaders.hlsl", nullptr, nullptr, "VSMain", "vs_5_0", compileFlags, 0, &vertexShader, nullptr));
 
 	std::vector<LPCWSTR> psArgs = { L"-E PSMain", L"-T ps_6_6" COMMA_DEBUG_ARGS};
-	ComPtr<IDxcBlob> pixelShader = DXHelpers::CompileShader(L"Shaders\\shaders.hlsl", psArgs);
+	ComPtr<IDxcBlob> pixelShader = DXHelpers::CompileShader(L"Shaders\\triangle_shaders.hlsl", psArgs);
 	//ThrowIfFailed(D3DCompileFromFile(L"shaders.hlsl", nullptr, nullptr, "PSMain", "ps_5_0", compileFlags, 0, &pixelShader, nullptr));
 
 	// Define the vertex input layout
