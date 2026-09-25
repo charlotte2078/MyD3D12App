@@ -146,26 +146,35 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="CommonDX\Public\CbvSrvUavHeap.h" />
+    <ClInclude Include="CommonDX\Public\DescriptorHeap.h" />
     <ClInclude Include="CommonDX\Public\DXSampleHelper.h" />
     <ClInclude Include="CommonDX\Public\DXSample.h" />
-    <ClInclude Include="Source\Triangle\TriangleApp.h" />
+    <ClInclude Include="CommonDX\Public\FrameResource.h" />
+    <ClInclude Include="CommonDX\Public\UploadBuffer.h" />
     <ClInclude Include="Utility\Public\Input.h" />
     <ClInclude Include="Utility\Public\MathHelper.h" />
+    <ClInclude Include="Source\Cube\CubeApp.h" />
+    <ClInclude Include="Source\Triangle\TriangleApp.h" />
     <ClInclude Include="CommonDX\Public\Includes.h" />
     <ClInclude Include="Utility\Public\Timer.h" />
     <ClInclude Include="CommonDX\Public\Win32Application.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="CommonDX\Private\CbvSrvUavHeap.cpp" />
+    <ClCompile Include="CommonDX\Private\DescriptorHeap.cpp" />
     <ClCompile Include="CommonDX\Private\DXSample.cpp" />
     <ClCompile Include="Source\Triangle\TriangleApp.cpp" />
     <ClCompile Include="Utility\Private\Input.cpp" />
     <ClCompile Include="Source\Main.cpp" />
     <ClCompile Include="Utility\Private\MathHelper.cpp" />
+    <ClCompile Include="Source\Cube\CubeApp.cpp" />
     <ClCompile Include="Utility\Private\Timer.cpp" />
     <ClCompile Include="CommonDX\Private\Win32Application.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+    <CustomBuild Include="Shaders\cube_shaders.hlsl">
     <CustomBuild Include="Shaders\triangle_shaders.hlsl">
       <FileType>Document</FileType>
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</DeploymentContent>
@@ -178,6 +187,7 @@
   <ImportGroup Label="ExtensionTargets">
     <Import Project="packages\Microsoft.Direct3D.D3D12.1.614.1\build\native\Microsoft.Direct3D.D3D12.targets" Condition="Exists('packages\Microsoft.Direct3D.D3D12.1.614.1\build\native\Microsoft.Direct3D.D3D12.targets')" />
     <Import Project="packages\Microsoft.Direct3D.DXC.1.9.2607.13\build\native\Microsoft.Direct3D.DXC.targets" Condition="Exists('packages\Microsoft.Direct3D.DXC.1.9.2607.13\build\native\Microsoft.Direct3D.DXC.targets')" />
+    <Import Project="packages\directxtk12_desktop_win10.2026.5.8.1\build\native\directxtk12_desktop_win10.targets" Condition="Exists('packages\directxtk12_desktop_win10.2026.5.8.1\build\native\directxtk12_desktop_win10.targets')" />
   </ImportGroup>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
@@ -187,5 +197,6 @@
     <Error Condition="!Exists('packages\Microsoft.Direct3D.D3D12.1.614.1\build\native\Microsoft.Direct3D.D3D12.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\Microsoft.Direct3D.D3D12.1.614.1\build\native\Microsoft.Direct3D.D3D12.targets'))" />
     <Error Condition="!Exists('packages\Microsoft.Direct3D.DXC.1.9.2607.13\build\native\Microsoft.Direct3D.DXC.props')" Text="$([System.String]::Format('$(ErrorText)', 'packages\Microsoft.Direct3D.DXC.1.9.2607.13\build\native\Microsoft.Direct3D.DXC.props'))" />
     <Error Condition="!Exists('packages\Microsoft.Direct3D.DXC.1.9.2607.13\build\native\Microsoft.Direct3D.DXC.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\Microsoft.Direct3D.DXC.1.9.2607.13\build\native\Microsoft.Direct3D.DXC.targets'))" />
+    <Error Condition="!Exists('packages\directxtk12_desktop_win10.2026.5.8.1\build\native\directxtk12_desktop_win10.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\directxtk12_desktop_win10.2026.5.8.1\build\native\directxtk12_desktop_win10.targets'))" />
   </Target>
 </Project>

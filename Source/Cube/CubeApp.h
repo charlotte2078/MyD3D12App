@@ -1,0 +1,124 @@
+// Based on code by Microsoft
+// https://github.com/microsoft/DirectX-Graphics-Samples/blob/master/Samples/Desktop/D3D12HelloWorld/src/HelloTriangle/D3D12HelloTriangle.h
+
+#pragma once
+
+#include "CommonDX/Public/DXSample.h"
+#include <CommonDX/Public/DescriptorHeap.h>
+#include "Utility/Public/MathHelper.h"
+#include <ResourceUploadBatch.h>
+#include <CommonDX/Public/UploadBuffer.h>
+//#include <CommonDX//Public/FrameResource.h>
+
+using namespace DirectX;
+using Microsoft::WRL::ComPtr;
+
+class CubeApp : public DXSample
+{
+public:
+	// Constructor
+	CubeApp(UINT width, UINT height, std::wstring name);
+
+	// Prohibit copying
+	CubeApp(const CubeApp& rhs) = delete;
+	CubeApp& operator=(const CubeApp& rhs) = delete;
+	
+	// Destructor
+	~CubeApp();
+
+	virtual void OnInit() override;
+	virtual void OnUpdate(const float deltaTime) override;
+	virtual void OnRender() override;
+	virtual void OnResize() override;
+	virtual void OnDestroy() override;
+
+private:
+	// The number of buffers in the swap chain
+	static constexpr UINT gFrameCount = 2;
+
+	const DXGI_FORMAT mkSwapChainFormat = DXGI_FORMAT_R8G8B8A8_UNORM; // 32-bit unsigned-normalized-integer format
+	const DXGI_FORMAT mkDepthStencilFormat = DXGI_FORMAT_D24_UNORM_S8_UINT; // 24-bits for depth and 8 bits for stencil
+
+	// Specifies the information each vertex will hold
+	struct Vertex
+	{
+		XMFLOAT3 position;
+		XMFLOAT4 color;
+	};
+
+	// Constant buffer formats
+	struct ObjectConstants
+	{
+		XMFLOAT4X4 World = MathHelper::Identity4x4();
+	};
+
+	struct PassConstants
+	{
+		XMFLOAT4X4 ViewProj = MathHelper::Identity4x4();
+	};
+
+	enum ROOT_ARG
+	{
+		ROOT_ARG_OBJECT_CBV = 0,
+		ROOT_ARG_PASS_CBV,
+		ROOT_ARG_COUNT
+	};
+
+	// Pipeline objects
+	CD3DX12_VIEWPORT mViewport;
+	CD3DX12_RECT mScissorRect;
+
+	ComPtr<IDXGISwapChain3> mSwapChain;
+	ComPtr<ID3D12Device> mDevice;
+
+	ComPtr<ID3D12CommandAllocator> mCommandAllocator;
+	ComPtr<ID3D12CommandQueue> mCommandQueue;
+	ComPtr<ID3D12GraphicsCommandList> mCommandList;
+
+	ComPtr<ID3D12Resource> mRenderTargets[gFrameCount];
+	UINT mFrameIndex;
+	DescriptorHeap mRtvHeap;
+
+	ComPtr<ID3D12RootSignature> mRootSignature;
+	ComPtr<ID3D12PipelineState> mPipelineState;
+
+	ComPtr<ID3D12Resource> mDepthStencilBuffer;
+	DescriptorHeap mDsvHeap;
+
+	ComPtr<ID3D12Fence> mFence;
+	UINT64 mFenceValue;
+
+	// Using a vertex and index buffer (and using a default heap)
+	ComPtr<ID3D12Resource> mVertexBufferGPU;
+	D3D12_VERTEX_BUFFER_VIEW mVertexBufferView;
+	ComPtr<ID3D12Resource> mIndexBufferGPU;
+	D3D12_INDEX_BUFFER_VIEW mIndexBufferView;
+	std::unique_ptr<DirectX::ResourceUploadBatch> mUploadBatch;
+
+	// Consant buffers
+	uint32_t mBoxCBHeapIndex = -1;
+	std::unique_ptr<UploadBuffer<ObjectConstants>> mObjectCB = nullptr;
+
+	uint32_t mPassCBHeapIndex = -1;
+	std::unique_ptr<UploadBuffer<PassConstants>> mPassCB = nullptr;
+
+	XMFLOAT4X4 mWorld = MathHelper::Identity4x4();
+	XMFLOAT4X4 mView = MathHelper::Identity4x4();
+	XMFLOAT4X4 mProj = MathHelper::Identity4x4();
+
+	void InitD3D();
+
+	void WaitForPreviousFrame();
+	void FlushCommandQueue();
+
+	void CreateCommandObjects();
+	void CreateSwapChain(IDXGIFactory6* factory);
+	void CreateDescriptorHeaps();
+	void CreateDepthStencilBuffer();
+	void CreateRTVsForSwapChain();
+	void CreateRootSignature();
+	void CreatePSO();
+	void CreateVertexAndIndexBuffers();
+	void CreateConstantBuffers();
+};
+

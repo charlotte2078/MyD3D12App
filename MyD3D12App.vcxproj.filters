@@ -44,6 +44,18 @@
     <ClInclude Include="Source\MyD3D12App.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="CommonDX\Public\FrameResource.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="CommonDX\Public\UploadBuffer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="CommonDX\Public\DescriptorHeap.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="CommonDX\Public\CbvSrvUavHeap.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\Main.cpp">
@@ -65,6 +77,12 @@
       <Filter>CommonDX</Filter>
     </ClCompile>
     <ClCompile Include="Source\MyD3D12App.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="CommonDX\Private\DescriptorHeap.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="CommonDX\Private\CbvSrvUavHeap.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

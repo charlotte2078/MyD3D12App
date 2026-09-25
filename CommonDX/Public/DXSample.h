@@ -4,7 +4,7 @@
 #pragma once
 
 #include "DXSampleHelper.h"
-#include "Win32Application.h"
+#include <Utility/Public/Timer.h>
 
 // Abstract class that holds base functionality for DX12 Apps.
 class DXSample
@@ -23,6 +23,7 @@ public:
 	virtual void OnInit() = 0;
 	virtual void OnUpdate(const float deltaTime) = 0;
 	virtual void OnRender() = 0;
+	virtual void OnResize() = 0;
 	virtual void OnDestroy() = 0;
 
 	// Getters
@@ -31,6 +32,14 @@ public:
 	const WCHAR* GetTitle() const { return mTitle.c_str(); }
 
 	void ParseCommandLineArgs(_In_reads_(argc) WCHAR* argv[], int argc);
+
+	void StartTimer();
+	float GetFrameTime();
+
+	void Pause(const bool pause);
+
+	void OnResizeStart();
+	void OnResizeEnd();
 
 protected:
 	std::wstring GetAssetFullPath(LPCWSTR assetName);
@@ -49,6 +58,14 @@ protected:
 
 	// Adapter info
 	bool mUseWarpDevice;
+
+	// App status
+	bool mAppPaused = false;
+	bool mMinimised = false;
+	bool mMaximised = false;
+	bool mResizing = false;
+
+	Timer mTimer;
 
 private:
 	// Root assets path

@@ -4,6 +4,10 @@
 #include "CommonDX/Public/DXSample.h"
 #include "CommonDX/Public/Win32Application.h"
 
+// Required exports for Agility SDK
+extern "C" { __declspec(dllexport) extern const UINT D3D12SDKVersion = 614; }
+extern "C" { __declspec(dllexport) extern const char* D3D12SDKPath = ".\\D3D12\\"; }
+
 using namespace Microsoft::WRL;
 
 DXSample::DXSample(UINT width, UINT height, std::wstring name) :
@@ -113,5 +117,45 @@ _Use_decl_annotations_
 			mTitle = mTitle + L" (WARP)";
 		}
 	}
+}
+
+void DXSample::StartTimer()
+{
+	mTimer.Start();
+}
+
+float DXSample::GetFrameTime()
+{
+	return mTimer.GetDeltaTime();
+}
+
+void DXSample::Pause(const bool pause)
+{
+	mAppPaused = pause;
+
+	if (pause)
+	{
+		mTimer.Stop();
+	}
+	else
+	{
+		mTimer.Start();
+	}
+}
+
+void DXSample::OnResizeStart()
+{
+	mAppPaused = true;
+	mResizing = true;
+	mTimer.Stop();
+}
+
+void DXSample::OnResizeEnd()
+{
+	mAppPaused = false;
+	mResizing = false;
+	mTimer.Start();
+
+	OnResize();
 }
 

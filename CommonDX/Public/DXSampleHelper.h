@@ -4,38 +4,46 @@
 #pragma once
 
 #include "Includes.h"
-#include <stdexcept>
+#include <d3d12.h>
 #include <dxcapi.h>
 #include <filesystem>
 #include <fstream>
+#include <wrl/client.h>
+#include <wrl/wrappers/corewrappers.h>
 
 using Microsoft::WRL::ComPtr;
 
+class DxException
+{
+public:
+	DxException(HRESULT hr, const std::wstring& functionName, const std::wstring& filename, int lineNumber) :
+		mHr(hr),
+		mFunctionName(functionName),
+		mFileName(filename),
+		mLineNumber(lineNumber)
+	{}
+
+private:
+	const HRESULT mHr;
+	const std::wstring mFunctionName;
+	const std::wstring mFileName;
+	const int mLineNumber;
+};
+
+#ifndef ThrowIfFailed
+#define ThrowIfFailed(x)											\
+	{																\
+		HRESULT hr__ = (x);											\
+		std::wstring wfn = DXHelpers::AnsiToWString(__FILE__);		\
+		if (FAILED(hr__))											\
+		{															\
+			throw DxException(hr__, L#x, wfn, __LINE__);			\
+		}															\
+	}
+#endif
+
 namespace DXHelpers
 {
-	inline std::string HrToString(HRESULT hr)
-	{
-		char s_str[64] = {};
-		sprintf_s(s_str, "HRESULT of 0x%08X", static_cast<UINT>(hr));
-		return std::string(s_str);
-	}
-
-	class HrException : public std::runtime_error
-	{
-	public:
-		HrException(HRESULT hr) : std::runtime_error(HrToString(hr)), mHr(hr) {}
-		HRESULT Error() const { return mHr; }
-	private:
-		const HRESULT mHr;
-	};
-
-	inline void ThrowIfFailed(HRESULT hr)
-	{
-		if (FAILED(hr))
-		{
-			throw HrException(hr);
-		}
-	}
 
 	inline void GetAssetsPath(_Out_writes_(pathSize) WCHAR* path, UINT pathSize)
 	{

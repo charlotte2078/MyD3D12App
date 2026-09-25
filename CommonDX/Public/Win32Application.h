@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "DXSample.h"
+#include <Windows.h>
 
 class DXSample;
 

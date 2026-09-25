@@ -1,7 +1,8 @@
 // Application entry point and window creation
 // Based on code by Frank Luna - 3D Game Programming with DirectX12 - Appendix A (pp 758-761)
 
-#include "CommonDX/Public/Includes.h"
+#include "Source/Cube/CubeApp.h"
+#include <CommonDX/Public/Win32Application.h>
 #include "Source/Triangle/TriangleApp.h"
 
 // Equivalent of main()
@@ -17,7 +18,7 @@
 _Use_decl_annotations_
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pCmdLine, int nShowCmd)
 {
-	TriangleApp triangleSample(1280, 720, L"My First Triangle");
+	CubeApp sample(1280, 720, L"My First Cube");
 
-	return Win32Application::Run(&triangleSample, hInstance, nShowCmd);
+	return Win32Application::Run(&sample, hInstance, nShowCmd);
 }
