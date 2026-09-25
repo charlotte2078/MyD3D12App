@@ -1,9 +1,9 @@
 // Application entry point and window creation
 // Based on code by Frank Luna - 3D Game Programming with DirectX12 - Appendix A (pp 758-761)
 
-#include "Source/Cube/CubeApp.h"
+#include "AppHeaders.h"
+
 #include <CommonDX/Public/Win32Application.h>
-#include "Source/Triangle/TriangleApp.h"
 
 // Equivalent of main()
 // 

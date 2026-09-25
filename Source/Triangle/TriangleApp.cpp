@@ -1,8 +1,7 @@
 #include "TriangleApp.h"
 
-#include "CommonDX/Public/Includes.h"
-
-using DXHelpers::ThrowIfFailed;
+#include <CommonDX/Public/Includes.h>
+#include <CommonDX/Public/Win32Application.h>
 
 TriangleApp::TriangleApp(UINT width, UINT height, std::wstring name) :
 	DXSample(width, height, name),
