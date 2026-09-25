@@ -1,4 +1,4 @@
-#include "MyD3D12App.h"
+#include "CubeApp.h"
 
 #include <CommonDX/Public/CbvSrvUavHeap.h>
 #include <CommonDX/Public/Win32Application.h>
@@ -10,7 +10,7 @@
 
 constexpr UINT CBV_SRV_UAV_HEAP_CAPACITY = 16384;
 
-MyD3D12App::MyD3D12App(UINT width, UINT height, std::wstring name) :
+CubeApp::CubeApp(UINT width, UINT height, std::wstring name) :
 	DXSample(width, height, name),
 	mFrameIndex(0),
 	mViewport(0.0f, 0.0f, static_cast<float>(width), static_cast<float>(height)),
@@ -19,11 +19,11 @@ MyD3D12App::MyD3D12App(UINT width, UINT height, std::wstring name) :
 {
 }
 
-MyD3D12App::~MyD3D12App()
+CubeApp::~CubeApp()
 {
 }
 
-void MyD3D12App::OnInit()
+void CubeApp::OnInit()
 {
 	InitD3D();
 	
@@ -44,7 +44,7 @@ void MyD3D12App::OnInit()
 	result.wait();
 }
 
-void MyD3D12App::InitD3D()
+void CubeApp::InitD3D()
 {
 	UINT dxgiFactoryFlags = 0;
 
@@ -106,7 +106,7 @@ void MyD3D12App::InitD3D()
 }
 
 // Update frame based values
-void MyD3D12App::OnUpdate(const float deltaTime)
+void CubeApp::OnUpdate(const float deltaTime)
 {
 	if (mAppPaused)
 	{
@@ -146,7 +146,7 @@ void MyD3D12App::OnUpdate(const float deltaTime)
 }
 
 // Render the scene
-void MyD3D12App::OnRender()
+void CubeApp::OnRender()
 {
 	if (mAppPaused)
 	{
@@ -201,7 +201,7 @@ void MyD3D12App::OnRender()
 	WaitForPreviousFrame();
 }
 
-void MyD3D12App::OnResize()
+void CubeApp::OnResize()
 {
 	assert(mDevice);
 	assert(mSwapChain);
@@ -256,12 +256,12 @@ void MyD3D12App::OnResize()
 	XMStoreFloat4x4(&mProj, P);
 }
 
-void MyD3D12App::OnDestroy()
+void CubeApp::OnDestroy()
 {
 	WaitForPreviousFrame();
 }
 
-void MyD3D12App::WaitForPreviousFrame()
+void CubeApp::WaitForPreviousFrame()
 {
 	// WAITING FOR THE FRAME TO COMPLETE BEFORE CONTINUING IS NOT BEST PRACTICE.
 	// This is code implemented as such for simplicity. The D3D12HelloFrameBuffering
@@ -273,7 +273,7 @@ void MyD3D12App::WaitForPreviousFrame()
 	mFrameIndex = mSwapChain->GetCurrentBackBufferIndex();
 }
 
-void MyD3D12App::FlushCommandQueue()
+void CubeApp::FlushCommandQueue()
 {
 	const UINT64 fence = mFenceValue;
 	ThrowIfFailed(mCommandQueue->Signal(mFence.Get(), fence));
@@ -293,7 +293,7 @@ void MyD3D12App::FlushCommandQueue()
 	}
 }
 
-void MyD3D12App::CreateCommandObjects()
+void CubeApp::CreateCommandObjects()
 {
 	// Describe and create the command queue
 	// The command queue holds commands the GPU will execute, which are submitted by the CPU
@@ -314,7 +314,7 @@ void MyD3D12App::CreateCommandObjects()
 	ThrowIfFailed(mCommandList->Close());
 }
 
-void MyD3D12App::CreateSwapChain(IDXGIFactory6* factory)
+void CubeApp::CreateSwapChain(IDXGIFactory6* factory)
 {
 	assert(factory);
 
@@ -342,13 +342,13 @@ void MyD3D12App::CreateSwapChain(IDXGIFactory6* factory)
 }
 
 // Create desctiptor heaps
-void MyD3D12App::CreateDescriptorHeaps()
+void CubeApp::CreateDescriptorHeaps()
 {
 	mRtvHeap.Init(mDevice.Get(), D3D12_DESCRIPTOR_HEAP_TYPE_RTV, gFrameCount);
 	mDsvHeap.Init(mDevice.Get(), D3D12_DESCRIPTOR_HEAP_TYPE_DSV, 1);
 }
 
-void MyD3D12App::CreateDepthStencilBuffer()
+void CubeApp::CreateDepthStencilBuffer()
 {
 	{
 		// Create the DSV
@@ -398,7 +398,7 @@ void MyD3D12App::CreateDepthStencilBuffer()
 	mCommandList->ResourceBarrier(1, &rbDepthCommonDepthWrite);
 }
 
-void MyD3D12App::CreateRTVsForSwapChain()
+void CubeApp::CreateRTVsForSwapChain()
 {
 	// Create an RTV for each frame
 	for (UINT i = 0; i < gFrameCount; ++i)
@@ -423,7 +423,7 @@ void MyD3D12App::CreateRTVsForSwapChain()
 
 // Create root signature
 // A root signature defines what types of resources are bound to the graphics pipeline
-void MyD3D12App::CreateRootSignature()
+void CubeApp::CreateRootSignature()
 {
 	CD3DX12_ROOT_PARAMETER slotRootParameter[ROOT_ARG_COUNT] = {};
 
@@ -466,7 +466,7 @@ void MyD3D12App::CreateRootSignature()
 }
 
 // Create the pipeline state (compile and load shaders)
-void MyD3D12App::CreatePSO()
+void CubeApp::CreatePSO()
 {
 #if defined(DEBUG) || defined(_DEBUG)  
 #define COMMA_DEBUG_ARGS ,DXC_ARG_DEBUG, DXC_ARG_SKIP_OPTIMIZATIONS
@@ -475,12 +475,11 @@ void MyD3D12App::CreatePSO()
 #endif
 
 	std::vector<LPCWSTR> vsArgs = { L"-E VSMain", L"-T vs_6_6" COMMA_DEBUG_ARGS};
-	ComPtr<IDxcBlob> vertexShader = DXHelpers::CompileShader(L"Shaders\\shaders.hlsl", vsArgs);
-	//ThrowIfFailed(D3DCompileFromFile(L"shaders.hlsl", nullptr, nullptr, "VSMain", "vs_5_0", compileFlags, 0, &vertexShader, nullptr));
-
+	ComPtr<IDxcBlob> vertexShader = DXHelpers::CompileShader(L"Shaders\\cube_shaders.hlsl", vsArgs);
+	
 	std::vector<LPCWSTR> psArgs = { L"-E PSMain", L"-T ps_6_6" COMMA_DEBUG_ARGS};
-	ComPtr<IDxcBlob> pixelShader = DXHelpers::CompileShader(L"Shaders\\shaders.hlsl", psArgs);
-	//ThrowIfFailed(D3DCompileFromFile(L"shaders.hlsl", nullptr, nullptr, "PSMain", "ps_5_0", compileFlags, 0, &pixelShader, nullptr));s
+	ComPtr<IDxcBlob> pixelShader = DXHelpers::CompileShader(L"Shaders\\cube_shaders.hlsl", psArgs);
+
 	// Define the vertex input layout
 	D3D12_INPUT_ELEMENT_DESC inputElementDescs[] =
 	{
@@ -509,7 +508,7 @@ void MyD3D12App::CreatePSO()
 }
 
 // Create the vertex buffer (also define geometry)
-void MyD3D12App::CreateVertexAndIndexBuffers()
+void CubeApp::CreateVertexAndIndexBuffers()
 {
 	constexpr int numCubeVertices = 8;
 
@@ -579,7 +578,7 @@ void MyD3D12App::CreateVertexAndIndexBuffers()
 	mIndexBufferView.SizeInBytes = static_cast<UINT>(cubeIndices.size() * sizeof(std::uint16_t));
 }
 
-void MyD3D12App::CreateConstantBuffers()
+void CubeApp::CreateConstantBuffers()
 {
 	CbvSrvUavHeap& cbvSrvUavHeap = CbvSrvUavHeap::Get();
 

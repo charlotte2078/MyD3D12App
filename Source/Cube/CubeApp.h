@@ -13,18 +13,18 @@
 using namespace DirectX;
 using Microsoft::WRL::ComPtr;
 
-class MyD3D12App : public DXSample
+class CubeApp : public DXSample
 {
 public:
 	// Constructor
-	MyD3D12App(UINT width, UINT height, std::wstring name);
+	CubeApp(UINT width, UINT height, std::wstring name);
 
 	// Prohibit copying
-	MyD3D12App(const MyD3D12App& rhs) = delete;
-	MyD3D12App& operator=(const MyD3D12App& rhs) = delete;
+	CubeApp(const CubeApp& rhs) = delete;
+	CubeApp& operator=(const CubeApp& rhs) = delete;
 	
 	// Destructor
-	~MyD3D12App();
+	~CubeApp();
 
 	virtual void OnInit() override;
 	virtual void OnUpdate(const float deltaTime) override;
