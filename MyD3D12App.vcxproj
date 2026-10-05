@@ -153,6 +153,7 @@
     <ClInclude Include="CommonDX\Public\FrameResource.h" />
     <ClInclude Include="CommonDX\Public\UploadBuffer.h" />
     <ClInclude Include="Source\AppHeaders.h" />
+    <ClInclude Include="Source\Shapes\ShapesApp.h" />
     <ClInclude Include="Utility\Public\Input.h" />
     <ClInclude Include="Utility\Public\MathHelper.h" />
     <ClInclude Include="Source\Cube\CubeApp.h" />
@@ -165,6 +166,8 @@
     <ClCompile Include="CommonDX\Private\CbvSrvUavHeap.cpp" />
     <ClCompile Include="CommonDX\Private\DescriptorHeap.cpp" />
     <ClCompile Include="CommonDX\Private\DXSample.cpp" />
+    <ClCompile Include="CommonDX\Private\FrameResource.cpp" />
+    <ClCompile Include="Source\Shapes\ShapesApp.cpp" />
     <ClCompile Include="Source\Triangle\TriangleApp.cpp" />
     <ClCompile Include="Utility\Private\Input.cpp" />
     <ClCompile Include="Source\Main.cpp" />

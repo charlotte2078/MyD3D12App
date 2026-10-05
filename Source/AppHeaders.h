@@ -4,3 +4,4 @@
 
 #include "Source/Cube/CubeApp.h"
 #include "Source/Triangle/TriangleApp.h"
+#include "Source/Shapes/ShapesApp.h"

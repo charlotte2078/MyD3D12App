@@ -18,7 +18,7 @@
 _Use_decl_annotations_
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pCmdLine, int nShowCmd)
 {
-	CubeApp sample(1280, 720, L"My First Cube");
+	ShapesApp sample(1280, 720, L"3D Shapes");
 
 	return Win32Application::Run(&sample, hInstance, nShowCmd);
 }

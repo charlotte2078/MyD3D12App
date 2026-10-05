@@ -106,6 +106,12 @@ private:
 	XMFLOAT4X4 mView = MathHelper::Identity4x4();
 	XMFLOAT4X4 mProj = MathHelper::Identity4x4();
 
+	// Frame resources
+	static const int gNumFrameResources = 3;
+	std::vector<std::unique_ptr<FrameResource>> mFrameResources;
+	FrameResource* mCurrFrameResource = nullptr;
+	int mCurrFrameResourceIndex = 0;
+
 	void InitD3D();
 
 	void WaitForPreviousFrame();
