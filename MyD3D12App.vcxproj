@@ -166,7 +166,6 @@
     <ClCompile Include="CommonDX\Private\CbvSrvUavHeap.cpp" />
     <ClCompile Include="CommonDX\Private\DescriptorHeap.cpp" />
     <ClCompile Include="CommonDX\Private\DXSample.cpp" />
-    <ClCompile Include="CommonDX\Private\FrameResource.cpp" />
     <ClCompile Include="Source\Shapes\ShapesApp.cpp" />
     <ClCompile Include="Source\Triangle\TriangleApp.cpp" />
     <ClCompile Include="Utility\Private\Input.cpp" />

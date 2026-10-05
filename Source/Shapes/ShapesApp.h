@@ -107,9 +107,10 @@ private:
 	XMFLOAT4X4 mProj = MathHelper::Identity4x4();
 
 	// Frame resources
+	using ShapesFrameResource = FrameResource<PassConstants>;
 	static const int gNumFrameResources = 3;
-	std::vector<std::unique_ptr<FrameResource>> mFrameResources;
-	FrameResource* mCurrFrameResource = nullptr;
+	std::vector<std::unique_ptr<ShapesFrameResource>> mFrameResources;
+	ShapesFrameResource* mCurrFrameResource = nullptr;
 	int mCurrFrameResourceIndex = 0;
 
 	void InitD3D();
