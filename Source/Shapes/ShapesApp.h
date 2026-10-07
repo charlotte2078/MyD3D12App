@@ -127,5 +127,6 @@ private:
 	void CreatePSO();
 	void CreateVertexAndIndexBuffers();
 	void CreateConstantBuffers();
+	void CreateFrameResources();
 };
 

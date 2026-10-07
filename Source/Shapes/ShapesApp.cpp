@@ -39,6 +39,7 @@ void ShapesApp::OnInit()
 	
 	CreateConstantBuffers();
 	CreateRootSignature();
+	CreateFrameResources();
 	CreatePSO();
 
 	result.wait();
@@ -113,6 +114,20 @@ void ShapesApp::OnUpdate(const float deltaTime)
 		return;
 	}
 
+	// Cycle the frame resource
+	mCurrFrameResourceIndex = (mCurrFrameResourceIndex + 1) % gNumFrameResources;
+	mCurrFrameResource = mFrameResources[mCurrFrameResourceIndex].get();
+
+	if (mCurrFrameResource->fence != 0 && mFence->GetCompletedValue() < mCurrFrameResource->fence)
+	{
+		HANDLE eventHandle = CreateEventEx(nullptr, nullptr, false, EVENT_ALL_ACCESS);
+
+		ThrowIfFailed(mFence->SetEventOnCompletion(mCurrFrameResource->fence, eventHandle));
+
+		WaitForSingleObject(eventHandle, INFINITE);
+		CloseHandle(eventHandle);
+	}
+
 	// Update the world, view, and projection matrices
 	XMVECTOR pos = XMVectorSet(0.0f, 0.0f, -5.0f, 1.0f); // TODO: add a moveable camera
 	XMVECTOR target = XMVectorZero();
@@ -153,8 +168,9 @@ void ShapesApp::OnRender()
 		return;
 	}
 
-	ThrowIfFailed(mCommandAllocator->Reset());
-	ThrowIfFailed(mCommandList->Reset(mCommandAllocator.Get(), mPipelineState.Get()));
+	auto cmdListAllocator = mCurrFrameResource->cmdListAlloc;
+	ThrowIfFailed(cmdListAllocator->Reset());
+	ThrowIfFailed(mCommandList->Reset(cmdListAllocator.Get(), mPipelineState.Get()));
 
 	CbvSrvUavHeap& cbvSrvUavHeap = CbvSrvUavHeap::Get();
 	ID3D12DescriptorHeap* descriptorHeaps[] = { cbvSrvUavHeap.GetD3dHeap() };
@@ -614,4 +630,14 @@ void ShapesApp::CreateConstantBuffers()
 	passCBV.SizeInBytes = mPassCB->ElementByteSize();
 
 	mDevice->CreateConstantBufferView(&passCBV, cbvSrvUavHeap.CpuHandle(mPassCBHeapIndex));
+}
+
+void ShapesApp::CreateFrameResources()
+{
+	constexpr UINT passCount = 1;
+
+	for (int i = 0; i < gNumFrameResources; ++i)
+	{
+		mFrameResources.push_back(std::make_unique<ShapesFrameResource>(mDevice.Get(), passCount));
+	}
 }
