@@ -135,6 +135,19 @@ void ShapesApp::OnUpdate(const float deltaTime)
 	XMMATRIX view = XMMatrixLookAtLH(pos, target, up);
 	XMStoreFloat4x4(&mView, view);
 
+	XMMATRIX proj = XMLoadFloat4x4(&mProj);
+	XMMATRIX viewProj = view * proj;
+
+	XMStoreFloat4x4(&mMainPassConstants.ViewProj, XMMatrixTranspose(viewProj));
+
+	auto currPassCB = mCurrFrameResource->passCB.get();
+	currPassCB->CopyData(0, mMainPassConstants);
+
+	//// Update the per-pass buffer
+	//PassConstants passConstants;
+	//XMStoreFloat4x4(&passConstants.ViewProj, XMMatrixTranspose(viewProj));
+	//mPassCB->CopyData(0, passConstants);
+
 	// Make the cube rotate over time
 	static float pitch, yaw, roll = 0.0f;
 	constexpr float smallNumber = 0.001f;
@@ -146,18 +159,12 @@ void ShapesApp::OnUpdate(const float deltaTime)
 	XMMATRIX rotation = XMMatrixRotationRollPitchYaw(pitch, yaw, roll);
 	world = world * rotation;
 
-	XMMATRIX proj = XMLoadFloat4x4(&mProj);
-	XMMATRIX viewProj = view * proj;
+	
 
 	// Update the per-object buffer
 	ObjectConstants objConstants;
 	XMStoreFloat4x4(&objConstants.World, XMMatrixTranspose(world));
 	mObjectCB->CopyData(0, objConstants);
-
-	// Update the per-pass buffer
-	PassConstants passConstants;
-	XMStoreFloat4x4(&passConstants.ViewProj, XMMatrixTranspose(viewProj));
-	mPassCB->CopyData(0, passConstants);
 }
 
 // Render the scene
@@ -620,10 +627,10 @@ void ShapesApp::CreateConstantBuffers()
 	// Pass constant buffer and view
 	mPassCBHeapIndex = cbvSrvUavHeap.NextFreeIndex();
 
-	mPassCB = std::make_unique<UploadBuffer<PassConstants>>(
+	/*mPassCB = std::make_unique<UploadBuffer<PassConstants>>(
 		mDevice.Get(),
 		1,
-		true);
+		true);*/
 
 	D3D12_CONSTANT_BUFFER_VIEW_DESC passCBV;
 	passCBV.BufferLocation = mPassCB->Resource()->GetGPUVirtualAddress();
