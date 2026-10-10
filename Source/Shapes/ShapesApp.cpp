@@ -98,8 +98,6 @@ void ShapesApp::InitD3D()
 	{
 		ThrowIfFailed(mDevice->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&mFence)));
 		DXHelpers::SetName(mFence.Get(), L"Fence");
-
-		mFenceValue = 1;
 	}
 
 	// This prevents the window from responding to alt-enter (which makes the window fullscreen)
@@ -219,7 +217,8 @@ void ShapesApp::OnRender()
 	// Present the frame
 	ThrowIfFailed(mSwapChain->Present(1, 0));
 
-	WaitForPreviousFrame();
+	mCurrFrameResource->fence = ++mFenceValue;
+	ThrowIfFailed(mCommandQueue->Signal(mFence.Get(), mFenceValue));
 }
 
 void ShapesApp::OnResize()
@@ -284,17 +283,17 @@ void ShapesApp::OnDestroy()
 
 void ShapesApp::FlushCommandQueue()
 {
-	const UINT64 fence = mFenceValue;
-	ThrowIfFailed(mCommandQueue->Signal(mFence.Get(), fence));
 	++mFenceValue;
 
+	ThrowIfFailed(mCommandQueue->Signal(mFence.Get(), mFenceValue));
+
 	// Wait until the GPU has completed commands up to this fence point.
-	if (mFence->GetCompletedValue() < fence)
+	if (mFence->GetCompletedValue() < mFenceValue)
 	{
 		HANDLE eventHandle = CreateEventEx(nullptr, nullptr, 0, EVENT_ALL_ACCESS);
 
 		// Fire event when GPU hits current fence.  
-		ThrowIfFailed(mFence->SetEventOnCompletion(fence, eventHandle));
+		ThrowIfFailed(mFence->SetEventOnCompletion(mFenceValue, eventHandle));
 
 		// Wait until the GPU hits current fence event is fired.
 		WaitForSingleObject(eventHandle, INFINITE);
