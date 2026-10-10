@@ -350,7 +350,6 @@ void ShapesApp::CreateSwapChain(IDXGIFactory6* factory)
 		&swapChain)); // Output pp for the swap chain
 
 	ThrowIfFailed(swapChain.As(&mSwapChain)); // Check we can use the IDXGISwapChain1 as an IDXGISwapChain3
-	//mFrameIndex = mSwapChain->GetCurrentBackBufferIndex(); // Introduced in IDSGISwapChain3
 }
 
 // Create desctiptor heaps
@@ -607,20 +606,6 @@ void ShapesApp::CreateConstantBuffers()
 	objectCBV.SizeInBytes = mObjectCB->ElementByteSize();
 
 	mDevice->CreateConstantBufferView(&objectCBV, cbvSrvUavHeap.CpuHandle(mBoxCBHeapIndex));
-
-	//// Pass constant buffer and view
-	//mPassCBHeapIndex = cbvSrvUavHeap.NextFreeIndex();
-
-	///*mPassCB = std::make_unique<UploadBuffer<PassConstants>>(
-	//	mDevice.Get(),
-	//	1,
-	//	true);*/
-
-	//D3D12_CONSTANT_BUFFER_VIEW_DESC passCBV;
-	//passCBV.BufferLocation = mPassCB->Resource()->GetGPUVirtualAddress();
-	//passCBV.SizeInBytes = mPassCB->ElementByteSize();
-
-	//mDevice->CreateConstantBufferView(&passCBV, cbvSrvUavHeap.CpuHandle(mPassCBHeapIndex));
 }
 
 void ShapesApp::CreateFrameResources()

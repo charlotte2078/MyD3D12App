@@ -99,9 +99,6 @@ private:
 	uint32_t mBoxCBHeapIndex = -1;
 	std::unique_ptr<UploadBuffer<ObjectConstants>> mObjectCB = nullptr;
 
-	//uint32_t mPassCBHeapIndex = -1;
-	//std::unique_ptr<UploadBuffer<PassConstants>> mPassCB = nullptr;
-
 	PassConstants mMainPassConstants;
 
 	XMFLOAT4X4 mWorld = MathHelper::Identity4x4();
