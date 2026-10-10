@@ -201,8 +201,8 @@ void ShapesApp::OnRender()
 	ID3D12Resource* passCB = mCurrFrameResource->passCB->Resource();
 	mCommandList->SetGraphicsRootConstantBufferView(ROOT_ARG_PASS_CBV, passCB->GetGPUVirtualAddress());
 
-	mCommandList->IASetVertexBuffers(0, 1, &mVertexBufferView);
-	mCommandList->IASetIndexBuffer(&mIndexBufferView);
+	mCommandList->IASetVertexBuffers(0, 1, &mCubeGeometry.vertexBufferView);
+	mCommandList->IASetIndexBuffer(&mCubeGeometry.indexBufferView);
 	mCommandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	
 	mCommandList->DrawIndexedInstanced(36, 1, 0, 0, 0);
@@ -564,7 +564,7 @@ void ShapesApp::CreateVertexAndIndexBuffers()
 		cubeVertices.size(),
 		sizeof(Vertex),
 		D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER,
-		&mVertexBufferGPU);
+		mCubeGeometry.vertexBufferGPU.GetAddressOf());
 
 	CreateStaticBuffer(
 		mDevice.Get(),
@@ -573,15 +573,15 @@ void ShapesApp::CreateVertexAndIndexBuffers()
 		cubeIndices.size(),
 		sizeof(std::uint16_t),
 		D3D12_RESOURCE_STATE_INDEX_BUFFER,
-		&mIndexBufferGPU);
+		mCubeGeometry.indexBufferGPU.GetAddressOf());
 
-	mVertexBufferView.BufferLocation = mVertexBufferGPU->GetGPUVirtualAddress();
-	mVertexBufferView.SizeInBytes = static_cast<UINT>(cubeVertices.size() * sizeof(Vertex));
-	mVertexBufferView.StrideInBytes = sizeof(Vertex);
+	mCubeGeometry.vertexBufferView.BufferLocation = mCubeGeometry.vertexBufferGPU->GetGPUVirtualAddress();
+	mCubeGeometry.vertexBufferView.SizeInBytes = static_cast<UINT>(cubeVertices.size() * sizeof(Vertex));
+	mCubeGeometry.vertexBufferView.StrideInBytes = sizeof(Vertex);
 
-	mIndexBufferView.BufferLocation = mIndexBufferGPU->GetGPUVirtualAddress();
-	mIndexBufferView.Format = DXGI_FORMAT_R16_UINT;
-	mIndexBufferView.SizeInBytes = static_cast<UINT>(cubeIndices.size() * sizeof(std::uint16_t));
+	mCubeGeometry.indexBufferView.BufferLocation = mCubeGeometry.indexBufferGPU->GetGPUVirtualAddress();
+	mCubeGeometry.indexBufferView.Format = DXGI_FORMAT_R16_UINT;
+	mCubeGeometry.indexBufferView.SizeInBytes = static_cast<UINT>(cubeIndices.size() * sizeof(std::uint16_t));
 }
 
 void ShapesApp::CreateConstantBuffers()

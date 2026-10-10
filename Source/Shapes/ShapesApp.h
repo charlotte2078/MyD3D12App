@@ -6,6 +6,7 @@
 #include <CommonDX/Public/DescriptorHeap.h>
 #include <CommonDX/Public/DXSample.h>
 #include <CommonDX/Public/FrameResource.h>
+#include <CommonDX/Public/MeshGeometry.h>
 #include <CommonDX/Public/UploadBuffer.h>
 #include <ResourceUploadBatch.h>
 #include <Utility/Public/MathHelper.h>
@@ -89,10 +90,7 @@ private:
 	UINT64 mFenceValue;
 
 	// Using a vertex and index buffer (and using a default heap)
-	ComPtr<ID3D12Resource> mVertexBufferGPU;
-	D3D12_VERTEX_BUFFER_VIEW mVertexBufferView;
-	ComPtr<ID3D12Resource> mIndexBufferGPU;
-	D3D12_INDEX_BUFFER_VIEW mIndexBufferView;
+	MeshGeometry mCubeGeometry;
 	std::unique_ptr<DirectX::ResourceUploadBatch> mUploadBatch;
 
 	// Constant buffers
