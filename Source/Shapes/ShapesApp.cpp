@@ -197,9 +197,7 @@ void ShapesApp::OnRender()
 	mCommandList->SetGraphicsRootSignature(mRootSignature.Get());
 
 	mCommandList->SetGraphicsRootDescriptorTable(ROOT_ARG_OBJECT_CBV, cbvSrvUavHeap.GpuHandle(mBoxCBHeapIndex));
-	//mCommandList->SetGraphicsRootDescriptorTable(ROOT_ARG_PASS_CBV, cbvSrvUavHeap.GpuHandle(mPassCBHeapIndex));
 
-	// THIS IS CURRENTLY CAUSING A CRASH - NEEDS INVESTIGATING
 	ID3D12Resource* passCB = mCurrFrameResource->passCB->Resource();
 	mCommandList->SetGraphicsRootConstantBufferView(ROOT_ARG_PASS_CBV, passCB->GetGPUVirtualAddress());
 
@@ -219,10 +217,7 @@ void ShapesApp::OnRender()
 	mCommandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
 
 	// Present the frame
-	//ThrowIfFailed(
-	mSwapChain->Present(1, 0);
-	// );
-	ThrowIfFailed(mDevice->GetDeviceRemovedReason());
+	ThrowIfFailed(mSwapChain->Present(1, 0));
 	mFrameIndex = (mFrameIndex + 1) % gFrameCount;
 
 
@@ -456,16 +451,11 @@ void ShapesApp::CreateRootSignature()
 		slotRootParameter[ROOT_ARG_OBJECT_CBV].InitAsDescriptorTable(1, &objectCbvTable);
 	}
 
-	// Table for per-pass constants
+	// CBV for per-pass constants
 	{
-		CD3DX12_DESCRIPTOR_RANGE passCbvTable;
-
-		constexpr UINT numDescriptors = 1;
 		constexpr UINT baseRegister = 1;
 
-		passCbvTable.Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, numDescriptors, baseRegister);
-
-		slotRootParameter[ROOT_ARG_PASS_CBV].InitAsDescriptorTable(1, &passCbvTable);
+		slotRootParameter[ROOT_ARG_PASS_CBV].InitAsConstantBufferView(baseRegister);
 	}
 	
 	CD3DX12_ROOT_SIGNATURE_DESC rootSignatureDesc;
