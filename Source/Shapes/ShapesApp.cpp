@@ -197,7 +197,11 @@ void ShapesApp::OnRender()
 	mCommandList->SetGraphicsRootSignature(mRootSignature.Get());
 
 	mCommandList->SetGraphicsRootDescriptorTable(ROOT_ARG_OBJECT_CBV, cbvSrvUavHeap.GpuHandle(mBoxCBHeapIndex));
-	mCommandList->SetGraphicsRootDescriptorTable(ROOT_ARG_PASS_CBV, cbvSrvUavHeap.GpuHandle(mPassCBHeapIndex));
+	//mCommandList->SetGraphicsRootDescriptorTable(ROOT_ARG_PASS_CBV, cbvSrvUavHeap.GpuHandle(mPassCBHeapIndex));
+
+	// THIS IS CURRENTLY CAUSING A CRASH - NEEDS INVESTIGATING
+	ID3D12Resource* passCB = mCurrFrameResource->passCB->Resource();
+	mCommandList->SetGraphicsRootConstantBufferView(ROOT_ARG_PASS_CBV, passCB->GetGPUVirtualAddress());
 
 	mCommandList->IASetVertexBuffers(0, 1, &mVertexBufferView);
 	mCommandList->IASetIndexBuffer(&mIndexBufferView);
@@ -215,7 +219,12 @@ void ShapesApp::OnRender()
 	mCommandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
 
 	// Present the frame
-	ThrowIfFailed(mSwapChain->Present(1, 0));
+	//ThrowIfFailed(
+	mSwapChain->Present(1, 0);
+	// );
+	ThrowIfFailed(mDevice->GetDeviceRemovedReason());
+	mFrameIndex = (mFrameIndex + 1) % gFrameCount;
+
 
 	mCurrFrameResource->fence = ++mFenceValue;
 	ThrowIfFailed(mCommandQueue->Signal(mFence.Get(), mFenceValue));
@@ -346,7 +355,7 @@ void ShapesApp::CreateSwapChain(IDXGIFactory6* factory)
 		&swapChain)); // Output pp for the swap chain
 
 	ThrowIfFailed(swapChain.As(&mSwapChain)); // Check we can use the IDXGISwapChain1 as an IDXGISwapChain3
-	mFrameIndex = mSwapChain->GetCurrentBackBufferIndex(); // Introduced in IDSGISwapChain3
+	//mFrameIndex = mSwapChain->GetCurrentBackBufferIndex(); // Introduced in IDSGISwapChain3
 }
 
 // Create desctiptor heaps
@@ -609,19 +618,19 @@ void ShapesApp::CreateConstantBuffers()
 
 	mDevice->CreateConstantBufferView(&objectCBV, cbvSrvUavHeap.CpuHandle(mBoxCBHeapIndex));
 
-	// Pass constant buffer and view
-	mPassCBHeapIndex = cbvSrvUavHeap.NextFreeIndex();
+	//// Pass constant buffer and view
+	//mPassCBHeapIndex = cbvSrvUavHeap.NextFreeIndex();
 
-	/*mPassCB = std::make_unique<UploadBuffer<PassConstants>>(
-		mDevice.Get(),
-		1,
-		true);*/
+	///*mPassCB = std::make_unique<UploadBuffer<PassConstants>>(
+	//	mDevice.Get(),
+	//	1,
+	//	true);*/
 
-	D3D12_CONSTANT_BUFFER_VIEW_DESC passCBV;
-	passCBV.BufferLocation = mPassCB->Resource()->GetGPUVirtualAddress();
-	passCBV.SizeInBytes = mPassCB->ElementByteSize();
+	//D3D12_CONSTANT_BUFFER_VIEW_DESC passCBV;
+	//passCBV.BufferLocation = mPassCB->Resource()->GetGPUVirtualAddress();
+	//passCBV.SizeInBytes = mPassCB->ElementByteSize();
 
-	mDevice->CreateConstantBufferView(&passCBV, cbvSrvUavHeap.CpuHandle(mPassCBHeapIndex));
+	//mDevice->CreateConstantBufferView(&passCBV, cbvSrvUavHeap.CpuHandle(mPassCBHeapIndex));
 }
 
 void ShapesApp::CreateFrameResources()
