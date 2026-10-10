@@ -98,8 +98,6 @@ void ShapesApp::InitD3D()
 	{
 		ThrowIfFailed(mDevice->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&mFence)));
 		DXHelpers::SetName(mFence.Get(), L"Fence");
-
-		mFenceValue = 1;
 	}
 
 	// This prevents the window from responding to alt-enter (which makes the window fullscreen)
@@ -159,8 +157,6 @@ void ShapesApp::OnUpdate(const float deltaTime)
 	XMMATRIX rotation = XMMatrixRotationRollPitchYaw(pitch, yaw, roll);
 	world = world * rotation;
 
-	
-
 	// Update the per-object buffer
 	ObjectConstants objConstants;
 	XMStoreFloat4x4(&objConstants.World, XMMatrixTranspose(world));
@@ -201,7 +197,9 @@ void ShapesApp::OnRender()
 	mCommandList->SetGraphicsRootSignature(mRootSignature.Get());
 
 	mCommandList->SetGraphicsRootDescriptorTable(ROOT_ARG_OBJECT_CBV, cbvSrvUavHeap.GpuHandle(mBoxCBHeapIndex));
-	mCommandList->SetGraphicsRootDescriptorTable(ROOT_ARG_PASS_CBV, cbvSrvUavHeap.GpuHandle(mPassCBHeapIndex));
+
+	ID3D12Resource* passCB = mCurrFrameResource->passCB->Resource();
+	mCommandList->SetGraphicsRootConstantBufferView(ROOT_ARG_PASS_CBV, passCB->GetGPUVirtualAddress());
 
 	mCommandList->IASetVertexBuffers(0, 1, &mVertexBufferView);
 	mCommandList->IASetIndexBuffer(&mIndexBufferView);
@@ -220,8 +218,11 @@ void ShapesApp::OnRender()
 
 	// Present the frame
 	ThrowIfFailed(mSwapChain->Present(1, 0));
+	mFrameIndex = (mFrameIndex + 1) % gFrameCount;
 
-	WaitForPreviousFrame();
+
+	mCurrFrameResource->fence = ++mFenceValue;
+	ThrowIfFailed(mCommandQueue->Signal(mFence.Get(), mFenceValue));
 }
 
 void ShapesApp::OnResize()
@@ -281,34 +282,22 @@ void ShapesApp::OnResize()
 
 void ShapesApp::OnDestroy()
 {
-	WaitForPreviousFrame();
-}
-
-void ShapesApp::WaitForPreviousFrame()
-{
-	// WAITING FOR THE FRAME TO COMPLETE BEFORE CONTINUING IS NOT BEST PRACTICE.
-	// This is code implemented as such for simplicity. The D3D12HelloFrameBuffering
-	// sample illustrates how to use fences for efficient resource usage and to
-	// maximize GPU utilization.
-
 	FlushCommandQueue();
-
-	mFrameIndex = mSwapChain->GetCurrentBackBufferIndex();
 }
 
 void ShapesApp::FlushCommandQueue()
 {
-	const UINT64 fence = mFenceValue;
-	ThrowIfFailed(mCommandQueue->Signal(mFence.Get(), fence));
 	++mFenceValue;
 
+	ThrowIfFailed(mCommandQueue->Signal(mFence.Get(), mFenceValue));
+
 	// Wait until the GPU has completed commands up to this fence point.
-	if (mFence->GetCompletedValue() < fence)
+	if (mFence->GetCompletedValue() < mFenceValue)
 	{
 		HANDLE eventHandle = CreateEventEx(nullptr, nullptr, 0, EVENT_ALL_ACCESS);
 
 		// Fire event when GPU hits current fence.  
-		ThrowIfFailed(mFence->SetEventOnCompletion(fence, eventHandle));
+		ThrowIfFailed(mFence->SetEventOnCompletion(mFenceValue, eventHandle));
 
 		// Wait until the GPU hits current fence event is fired.
 		WaitForSingleObject(eventHandle, INFINITE);
@@ -361,7 +350,7 @@ void ShapesApp::CreateSwapChain(IDXGIFactory6* factory)
 		&swapChain)); // Output pp for the swap chain
 
 	ThrowIfFailed(swapChain.As(&mSwapChain)); // Check we can use the IDXGISwapChain1 as an IDXGISwapChain3
-	mFrameIndex = mSwapChain->GetCurrentBackBufferIndex(); // Introduced in IDSGISwapChain3
+	//mFrameIndex = mSwapChain->GetCurrentBackBufferIndex(); // Introduced in IDSGISwapChain3
 }
 
 // Create desctiptor heaps
@@ -462,16 +451,11 @@ void ShapesApp::CreateRootSignature()
 		slotRootParameter[ROOT_ARG_OBJECT_CBV].InitAsDescriptorTable(1, &objectCbvTable);
 	}
 
-	// Table for per-pass constants
+	// CBV for per-pass constants
 	{
-		CD3DX12_DESCRIPTOR_RANGE passCbvTable;
-
-		constexpr UINT numDescriptors = 1;
 		constexpr UINT baseRegister = 1;
 
-		passCbvTable.Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, numDescriptors, baseRegister);
-
-		slotRootParameter[ROOT_ARG_PASS_CBV].InitAsDescriptorTable(1, &passCbvTable);
+		slotRootParameter[ROOT_ARG_PASS_CBV].InitAsConstantBufferView(baseRegister);
 	}
 	
 	CD3DX12_ROOT_SIGNATURE_DESC rootSignatureDesc;
@@ -624,19 +608,19 @@ void ShapesApp::CreateConstantBuffers()
 
 	mDevice->CreateConstantBufferView(&objectCBV, cbvSrvUavHeap.CpuHandle(mBoxCBHeapIndex));
 
-	// Pass constant buffer and view
-	mPassCBHeapIndex = cbvSrvUavHeap.NextFreeIndex();
+	//// Pass constant buffer and view
+	//mPassCBHeapIndex = cbvSrvUavHeap.NextFreeIndex();
 
-	/*mPassCB = std::make_unique<UploadBuffer<PassConstants>>(
-		mDevice.Get(),
-		1,
-		true);*/
+	///*mPassCB = std::make_unique<UploadBuffer<PassConstants>>(
+	//	mDevice.Get(),
+	//	1,
+	//	true);*/
 
-	D3D12_CONSTANT_BUFFER_VIEW_DESC passCBV;
-	passCBV.BufferLocation = mPassCB->Resource()->GetGPUVirtualAddress();
-	passCBV.SizeInBytes = mPassCB->ElementByteSize();
+	//D3D12_CONSTANT_BUFFER_VIEW_DESC passCBV;
+	//passCBV.BufferLocation = mPassCB->Resource()->GetGPUVirtualAddress();
+	//passCBV.SizeInBytes = mPassCB->ElementByteSize();
 
-	mDevice->CreateConstantBufferView(&passCBV, cbvSrvUavHeap.CpuHandle(mPassCBHeapIndex));
+	//mDevice->CreateConstantBufferView(&passCBV, cbvSrvUavHeap.CpuHandle(mPassCBHeapIndex));
 }
 
 void ShapesApp::CreateFrameResources()

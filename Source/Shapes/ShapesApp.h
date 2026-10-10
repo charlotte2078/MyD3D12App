@@ -95,7 +95,7 @@ private:
 	D3D12_INDEX_BUFFER_VIEW mIndexBufferView;
 	std::unique_ptr<DirectX::ResourceUploadBatch> mUploadBatch;
 
-	// Consant buffers
+	// Constant buffers
 	uint32_t mBoxCBHeapIndex = -1;
 	std::unique_ptr<UploadBuffer<ObjectConstants>> mObjectCB = nullptr;
 
@@ -117,7 +117,6 @@ private:
 
 	void InitD3D();
 
-	void WaitForPreviousFrame();
 	void FlushCommandQueue();
 
 	void CreateCommandObjects();
