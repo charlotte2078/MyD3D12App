@@ -159,8 +159,6 @@ void ShapesApp::OnUpdate(const float deltaTime)
 	XMMATRIX rotation = XMMatrixRotationRollPitchYaw(pitch, yaw, roll);
 	world = world * rotation;
 
-	
-
 	// Update the per-object buffer
 	ObjectConstants objConstants;
 	XMStoreFloat4x4(&objConstants.World, XMMatrixTranspose(world));
@@ -281,19 +279,7 @@ void ShapesApp::OnResize()
 
 void ShapesApp::OnDestroy()
 {
-	WaitForPreviousFrame();
-}
-
-void ShapesApp::WaitForPreviousFrame()
-{
-	// WAITING FOR THE FRAME TO COMPLETE BEFORE CONTINUING IS NOT BEST PRACTICE.
-	// This is code implemented as such for simplicity. The D3D12HelloFrameBuffering
-	// sample illustrates how to use fences for efficient resource usage and to
-	// maximize GPU utilization.
-
 	FlushCommandQueue();
-
-	mFrameIndex = mSwapChain->GetCurrentBackBufferIndex();
 }
 
 void ShapesApp::FlushCommandQueue()
